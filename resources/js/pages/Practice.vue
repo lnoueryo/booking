@@ -4,7 +4,7 @@
             <div style="width: 100%;">
                 <transition name="fade">
                     <div class="text-center d-flex" style="position:relative">
-                        <div style="position:absolute;left:0;right:0;top:0;bottom:0;z-index:0" @mouseleave="dragEnd" @mousemove="dragging($event)" @mouseup="dragEnd" :style="{display: 'block', zIndex: disabled?2:0}"></div>
+                        <div style="position:absolute;left:0;right:0;top:0;bottom:0;z-index:0" @touchend="dragEnd" @mouseleave="dragEnd" @mousemove="dragging($event)" @touchmove="touchMove($event)" @mouseup="dragEnd" :style="{display: 'block', zIndex: disabled?2:0}"></div>
                         <div>
                             <div style="border: 1px solid #e0e0e0;color: #000;">Date\Time</div>
                             <div v-for="(c, i) in calendar" :key="i">
@@ -20,8 +20,8 @@
                             <div ref="cells">
                                 <div v-for="(c, i) in calendar" :key="i" class="d-flex">
                                     <div class="frame" ref="frame" v-for="(time, j) in c" :key="j">
-                                        <router-link v-if="time.isBooking" ref="booking" @mousedown.native="dragStart($event);index1=j;index2=i;" @mousemove.native="dragging($event)" tag="button" class="link" :to="{name: 'detail', params: {id: time.id}}"  :style="{width: width(time, j+i*19),transform: ''}" :disabled="disabled"><span>{{time.user.name}}</span></router-link>
-                                        <div @mousemove="dragging($event)" ref="dev" style="padding: 10px 0" v-else><b>&nbsp;&nbsp;</b></div>
+                                        <router-link @touchend.native="touchEnd({name: 'detail', params: {id: time.id}})" v-if="time.isBooking" ref="booking" @touchstart.native.prevent="touchStart($event);index1=j;index2=i;" @mousedown.native="dragStart($event);index1=j;index2=i;" @mousemove.native.prevent="dragging($event)" @touchmove.native="touchMove($event)" tag="button" class="link" :to="{name: 'detail', params: {id: time.id}}"  :style="{width: width(time, j+i*19),transform: ''}" :disabled="disabled"><span>{{time.user.name}}</span></router-link>
+                                        <div @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="padding: 10px 0" v-else><b>&nbsp;&nbsp;</b></div>
                                     </div>
                                 </div>
                             </div>
@@ -56,21 +56,9 @@ export default {
             bookingIndex: '',
             index1: 0,
             index2: 0,
+            touchJudge: '',
         }
     },
-    computed: {
-        // translateX() {
-        //     return `translateX(${this.currentPosition+this.distance}px)`
-        // }
-    },
-    // watch: {
-    //     duration: {
-    //         handler(){
-    //             this.makeCalendar(this.dateIndex);
-    //         },
-    //         immediate: true
-    //     },
-    // },
     async created(){
         const startDate = new Date();
         startDate.setHours(0);
@@ -91,13 +79,33 @@ export default {
         this.makeCalendar(0);
     },
     methods: {
-        // translate() {
-        //     return `translate(${this.currentPositionX+this.distanceX}px,${this.currentPositionY+this.distanceY}px)`
-        // },
+        touchStart(e){
+            this.startX = e.touches[0].clientX;
+            this.startY = e.touches[0].clientY;
+            let that = this;
+            this.touchJudge = setTimeout(function(){that.isMouse = true;that.$refs.frame[that.index1+that.index2*19].children[0].style.opacity=0.6},200)
+        },
         dragStart(e){
             this.startX = e.clientX
             this.startY = e.clientY
             this.isMouse = true;
+        },
+        touchMove(e){
+            if (this.isMouse) {
+                let calendar = this.calendar[this.index2][this.index1]
+                this.disabled = true;
+                const movedDistanceX = e.touches[0].clientX - this.startX
+                const movedDistanceY = e.touches[0].clientY - this.startY
+                // const distance = this.currentPosition+movedDistance
+                this.distanceX = movedDistanceX;
+                this.distanceY = movedDistanceY;
+                // if(170>distance && distance > -((this.styles.length-3)*340)-170){
+                //     }
+                const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
+                console.log(booking)
+                booking.style.transform = `translate(${calendar.x + this.distanceX}px,${calendar.y + this.distanceY}px)`
+                // console.log(this.$refs.frame[this.index1+this.index2*19].children[0].style)
+            }
         },
         dragging(e){
             if (this.isMouse) {
@@ -119,18 +127,42 @@ export default {
             this.disabled = false;
             this.isMouse = false;
             let calendar = this.calendar[this.index2][this.index1]
-            calendar.x = calendar.x + this.distanceX;
-            calendar.y = calendar.y + this.distanceY;
-            // this.currentPosition = Math.round((this.currentPosition + this.distance)/340)*340;
+            // calendar.x = calendar.x + this.distanceX;
+            // calendar.y = calendar.y + this.distanceY;
+            calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
+            calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
+            const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
+            booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
+            booking.style.opacity = 1
             this.distanceX = 0;
             this.distanceY = 0;
+        },
+        touchEnd(root){
+            if (this.isMouse) {
+                this.disabled = false;
+                this.isMouse = false;
+                let calendar = this.calendar[this.index2][this.index1]
+                // calendar.x = calendar.x + this.distanceX;
+                // calendar.y = calendar.y + this.distanceY;
+                calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
+                calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
+                const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
+                booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
+                booking.style.opacity = 1
+                this.distanceX = 0;
+                this.distanceY = 0;
+            } else {
+                clearTimeout(this.touchJudge)
+                this.$router.push(root)
+            }
         },
         // dragEnd(){
         //     this.disabled = false;
         //     this.isMouse = false;
-        //     this.currentPositionX = this.currentPositionX + this.distanceX;
-        //     this.currentPositionY = this.currentPositionY + this.distanceY;
-        //     // this.currentPosition = Math.round((this.currentPosition + this.distance)/340)*340;
+        //     let calendar = this.calendar[this.index2][this.index1]
+        //     calendar.x = calendar.x + this.distanceX;
+        //     calendar.y = calendar.y + this.distanceY;
+        //     this.currentPosition = Math.round((this.currentPosition + this.distance)/63)*63;
         //     this.distanceX = 0;
         //     this.distanceY = 0;
         // },
@@ -139,20 +171,15 @@ export default {
             return width
         },
         sqlToJsDate(sqlDate){
-            //sqlDate in SQL DATETIME format ("yyyy-mm-dd hh:mm:ss.ms")
             var sqlDateArr1 = sqlDate.split("-");
-            //format of sqlDateArr1[] = ['yyyy','mm','dd hh:mm:ms']
             var sYear = sqlDateArr1[0];
             var sMonth = (Number(sqlDateArr1[1]) - 1).toString();
             var sqlDateArr2 = sqlDateArr1[2].split(" ");
-            //format of sqlDateArr2[] = ['dd', 'hh:mm:ss.ms']
             var sDay = sqlDateArr2[0];
             var sqlDateArr3 = sqlDateArr2[1].split(":");
-            //format of sqlDateArr3[] = ['hh','mm','ss.ms']
             var sHour = sqlDateArr3[0];
             var sMinute = sqlDateArr3[1];
             var sqlDateArr4 = sqlDateArr3[2].split(".");
-            //format of sqlDateArr4[] = ['ss','ms']
             var sSecond = sqlDateArr4[0];
             return new Date(sYear,sMonth,sDay,sHour,sMinute,sSecond);
         },
@@ -177,7 +204,6 @@ export default {
                 this.isBooking()
             })
             .then(()=>{
-                console.log(3)
                 this.bookableDate((this.duration/30)-1);
             })
             .catch((error)=>{
@@ -267,13 +293,14 @@ export default {
         position: absolute;
         background-color: #757575;
         overflow:hidden;
-        left:5px;
+        left:5%;
         top:25%;
         z-index:1;
         height: 25px;
         border-radius:5px;
         color:white;
-        text-decoration:none
+        text-decoration:none;
+        transition: opacity 0.7s,transform 0.05s;
     }
     .period{
         border-bottom: 1px solid #e0e0e0;
@@ -286,7 +313,6 @@ export default {
         border-bottom: 1px solid #e0e0e0;
         color: #000;
         position: relative;
-        max-width:63px;
         width:100%;
         height: 46px;
     }
