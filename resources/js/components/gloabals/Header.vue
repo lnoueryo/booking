@@ -45,7 +45,7 @@ export default {
                     to: '/booking'
                 },
             ],
-            title: 'Rservierhung',
+            title: 'Reservierung',
             group: null,
         }
     },

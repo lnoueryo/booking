@@ -160,7 +160,7 @@ export default {
             }
             let minutes;
             if (changedFormat.getMinutes()>=10) {
-                minutes = changedFormat.getMinutes();
+                minutes = Math.round(changedFormat.getMinutes()/10)*10;
             } else {
                 minutes = '0' + changedFormat.getMinutes()
             }
@@ -179,7 +179,7 @@ export default {
         hello(){
             axios.get(`../api/booking/${this.id}`)
             .then(response=>{
-                this.booking = response.data
+                this.booking = response.data;
             })
         }
     },
