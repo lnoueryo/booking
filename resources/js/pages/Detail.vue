@@ -1,16 +1,20 @@
 <template>
     <div v-if="booking">
-        <div class="d-flex" style="align-items:center;padding:1% 0;">
-            <h2 style="margin:0 1%">{{booking.id}}</h2>
-            <h2>{{user.name}}</h2>
-            <div class="d-flex" style="justify-content:space-around;align-items:center;margin:0 3%;max-width: 600px;width:100%;">
-                <h3>予約日<br>{{date(booking.from)}}</h3>
-                <h3>作成日<br>{{date(booking.created_at)}}</h3>
+        <div class="d-flex" style="align-items:center;padding:1% 0;justify-content: space-between;width: 100%">
+            <div class="d-flex" style="align-items:center;width: 100%">
+                <h2 style="margin:0 1%">{{booking.id}}</h2>
+                <h2>{{user.name}}</h2>
+                <div class="d-flex" style="justify-content:space-around;align-items:center;margin:0 3%;max-width: 400px;width:100%;">
+                    <h3>予約日<br>{{date(booking.from)}}</h3>
+                    <h3>作成日<br>{{date(booking.created_at)}}</h3>
+                </div>
             </div>
-            <h3 style="margin:0 3%;">合計金額<br><div class="text-right"><span>{{price}}</span><span>円</span></div></h3>
-            <v-col cols="2">
-            <v-select v-model="select" :items="items" item-text="status" label="Select" persistent-hint return-object single-line></v-select>
-            </v-col>
+            <div class="d-flex" style="align-items:center;">
+                <h3 style="margin:0 3%;">合計金額<br><div class="text-right"><span>{{price}}</span><span>円</span></div></h3>
+                <v-col cols="6">
+                <v-select v-model="select" :items="items" item-text="status" label="Select" persistent-hint return-object single-line></v-select>
+                </v-col>
+            </div>
         </div>
         <div class="d-flex" style="justify-content: space-between;margin-bottom: 3%">
             <v-card style="max-width: 550px;width: 100%;padding:2%">
@@ -124,7 +128,13 @@ export default {
         },
     },
     created(){
-        this.hello()
+        axios.get(`api/booking/${this.id}`)
+        .then(response=>{
+            this.booking = response.data;
+            if (!response.data.isRead) {
+                axios.put(`api/booking/${this.id}`,{is_read: true})
+            }
+        })
     },
     methods: {
         date(time){
@@ -152,17 +162,17 @@ export default {
         },
         time(time){
             let changedFormat = new Date(time);
+            let minutes;
+            changedFormat.setMinutes(Math.round(changedFormat.getMinutes()/10)*10)
+            minutes = changedFormat.getMinutes();
+            if (changedFormat.getMinutes()<10) {
+                minutes = '0' + changedFormat.getMinutes()
+            }
             let hours;
             if (changedFormat.getHours()>=10) {
                 hours = changedFormat.getHours();
             } else {
                 hours = '0' + changedFormat.getHours()
-            }
-            let minutes;
-            if (changedFormat.getMinutes()>=10) {
-                minutes = Math.round(changedFormat.getMinutes()/10)*10;
-            } else {
-                minutes = '0' + changedFormat.getMinutes()
             }
             const newFormat = `${hours}:${minutes}`
             return newFormat;
@@ -176,12 +186,11 @@ export default {
                 return duration/60+'時間';
             }
         },
-        hello(){
-            axios.get(`../api/booking/${this.id}`)
-            .then(response=>{
-                this.booking = response.data;
+        delete(){
+            axios.delete('api/booking/3').then((res)=>{
+                console.log(res.data)
             })
-        }
+        },
     },
 }
 </script>

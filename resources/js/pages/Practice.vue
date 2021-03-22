@@ -27,13 +27,14 @@
                                         @touchend.native="touchEnd({name: 'detail', params: {id: time.id}})"
                                         tag="button" class="link" ref="booking"
                                         :to="{name: 'detail', params: {id: time.id}}"
-                                        :style="{width: width(time, j+i*19),transform: ''}"
+                                        :style="{width: width(time, j+i*19),transform: '',backgroundColor: time.is_read==false?'#4C64D3':'#757575'}"
                                         :disabled="disabled"
                                         v-if="time.isBooking"
                                         >
                                         <span>{{time.user.name}}</span>
                                         </router-link>
-                                        <div @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="padding: 10px 0" v-else><b>&nbsp;&nbsp;</b></div>
+                                        <div @mousedown="make($event, time);index1=j;index2=i;" @click="touchMake(time);index1=j;index2=i;booking=time" @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="width: 100%;height: 100%;" v-else></div>
+                                        <!-- <div @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="padding: 10px 0"><b>&nbsp;&nbsp;</b></div> -->
                                     </div>
                                 </div>
                             </div>
@@ -44,20 +45,13 @@
                 <v-btn @click="nextWeek">next</v-btn>
             </div>
         </div>
-        <v-dialog
-            v-model="dialog"
-            max-width="400"
-            >
+        <v-dialog v-model="dialog" max-width="400">
             <v-card>
                 <v-card-title class="headline" v-html="dialogTitle">
                 </v-card-title>
-
                 <v-card-text v-html="dialogMessage">
                 </v-card-text>
-
                 <v-card-actions>
-                <!-- <v-spacer></v-spacer> -->
-
                 <v-btn color="indigo darken-1" text @click="changeTime">
                     はい
                 </v-btn>
@@ -67,9 +61,55 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-dialog v-model="bookingDialog" persistent max-width="600px">
+            <v-card>
+                <v-card-title>
+                    <span class="headline">User Profile</span>
+                </v-card-title>
+                <v-card-text>
+                    <v-container>
+                        <v-row>
+                            <v-col cols="12" sm="6" md="4">
+                                <v-text-field label="Legal first name*" required></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="4">
+                                <v-text-field label="Legal middle name" hint="example of helper text only on focus"></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="4">
+                                <v-text-field label="Legal last name*" hint="example of persistent helper text" persistent-hint required></v-text-field>
+                            </v-col>
+                            <v-col cols="12">
+                                <v-text-field label="Email*" required></v-text-field>
+                            </v-col>
+                            <v-col cols="12">
+                                <v-text-field label="Password*" type="password" required></v-text-field>
+                            </v-col>
+                            <v-col ols="12" sm="6">
+                                <v-select :items="['0-17', '18-29', '30-54', '54+']" label="Age*" required></v-select>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                                <v-autocomplete :items="['Skiing', 'Ice hockey', 'Soccer', 'Basketball', 'Hockey', 'Reading', 'Writing', 'Coding', 'Basejump']" label="Interests" multiple></v-autocomplete>
+                            </v-col>
+                        </v-row>
+                    </v-container>
+                    <small>*indicates required field</small>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="blue darken-1" text @click="closeBookingDialog">
+                        Close
+                    </v-btn>
+                    <v-btn color="blue darken-1" text @click="closeBookingDialog">
+                        Save
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 <script>
+// import EventTag from '../components/EventTag'
+// import router from '../routes';
 export default {
     props: ['duration', 'price', 'title'],
     data() {
@@ -85,6 +125,7 @@ export default {
             startX: 0,
             startY: 0,
             isMouse: false,
+            isMakeMouse: false,
             disabled: false,
             currentPositionX: 0,
             currentPositionY: 0,
@@ -97,6 +138,7 @@ export default {
             dialog: false,
             dialogTitle: '',
             dialogMessage: '',
+            bookingDialog: false
         }
     },
     async created(){
@@ -109,29 +151,90 @@ export default {
         endDate.setHours(0);
         endDate.setMinutes(0);
         endDate.setSeconds(0);
-        const response = await (axios.get('https://lnoueryo98.sakura.ne.jp/seasons/api/booking'));
+        const response = await (axios.get('api/booking'));
         const bookings = response.data;
         for (let i = 0; i < bookings.length; i++) {
-            bookings[i].from = await this.sqlToJsDate(bookings[i].from)
-            bookings[i].to = await this.sqlToJsDate(bookings[i].to)
             await this.bookings.push(bookings[i]);
         }
         this.makeCalendar(0);
+        Echo.channel('new-booking')
+        .listen('NewBooking',response => {
+            this.bookings.push(response.booking);
+            this.isBooking(this.dateIndex);
+        });
     },
     methods: {
+        closeBookingDialog(){
+            this.bookingDialog = false;
+            this.checkBooking()
+            this.bookings.splice(this.bookings.length-1, 1);
+            this.isBooking(this.dateIndex);
+        },
+        touchMake(booking){
+            this.booking = Object.assign(booking,{user: {name: 'new'},isBooking: true,duration: 30,from:booking.date});
+            this.bookings.push(this.booking);
+            this.isBooking();
+            this.bookingDialog = true;
+        },
+        make(e,booking){
+            this.booking = Object.assign(booking,{user: {name: 'new'},isBooking: true,duration: 30,from:booking.date});
+            this.bookings.push(this.booking);
+            this.isBooking();
+            this.isMakeMouse = true;
+            this.disabled = true;
+            this.startX = e.clientX
+            this.startY = e.clientY
+        },
+        moveBooking(e){
+            const movedDistanceX = e.clientX - this.startX
+            const booking = this.bookings[this.bookings.length-1];
+            this.distanceX = movedDistanceX;
+            if((30+(Math.round((this.distanceX)/63))*30) !== booking.duration){
+                const frame = this.$refs.frame[this.index1 + this.index2*19];
+                let duration = 30+(Math.round((this.distanceX)/63))*30;
+                if (duration>1) {
+                    frame.children[0].style.width = (frame.getBoundingClientRect().width*Math.sqrt(Math.pow(duration, 2))/30-10) + 'px';
+                    this.$set(booking, 'duration', duration);
+                    } else {
+                    duration-=60
+                    frame.children[0].style.width = (frame.getBoundingClientRect().width*Math.sqrt(Math.pow(duration, 2))/30-10) + 'px';
+                    this.$set(booking, 'duration', Math.sqrt(Math.pow(duration, 2)));
+                    duration+=30
+                    frame.children[0].style.transform = `translate(${frame.getBoundingClientRect().width*duration/30}px,0)`
+                }
+            }
+        },
+        endMoveBooking(){
+            this.bookingDialog = true;
+            this.isMakeMouse = false;
+            this.disabled = false;
+        },
         changeTime(){
-            const params = {from: new Date(this.changedBooking.newFrom), to: new Date(this.changedBooking.newTo)}
-            console.log(params)
-            axios.post(`https://lnoueryo98.sakura.ne.jp/seasons/api/booking/update/${this.booking.id}`,params)
+            const params = {from: this.changedBooking.newFrom, to: this.changedBooking.newTo}
+            axios.put(`api/booking/${this.booking.id}`,params)
             .then((response)=>{
                 this.bookings = this.bookings.filter((booking)=>{
                     return booking.id !== this.booking.id;
                 })
-                response.data.from = new Date(response.data.from);
-                response.data.to = new Date(response.data.to);
+                this.checkBooking();
+                // console.log(this.bookings[index])
+                // this.bookings.splice(index, 1)
+                response.data.from = response.data.from;
+                response.data.to = response.data.to;
                 this.bookings.push(response.data);
-                this.makeCalendar(this.dateIndex);
+                this.isBooking(this.dateIndex);
                 this.dialog = false
+            })
+        },
+        checkBooking(){
+            this.calendar.forEach((date, i) => {
+                date.forEach((time, j) => {
+                    if (this.floor(this.booking.from)==this.floor(time.date)) {
+                        const calendar = this.calendar[i][j];
+                        const newCell = {date: calendar.date, isBooking: false, x: 0, y: 0}
+                        this.calendar[i].splice(j, 1, newCell)
+                    }
+                })
             })
         },
         undo(){
@@ -161,60 +264,41 @@ export default {
                 const movedDistanceX = e.touches[0].clientX - this.startX
                 const movedDistanceY = e.touches[0].clientY - this.startY
                 const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
-                const cells = this.$refs.cells;
                 this.distanceX = movedDistanceX;
                 this.distanceY = movedDistanceY;
-                const judgeLeft = cells.getBoundingClientRect().left-30 < booking.getBoundingClientRect().left;
-                const judgeTop = cells.getBoundingClientRect().top-10 < booking.getBoundingClientRect().top;
-                const judgeRight = cells.getBoundingClientRect().right+30 > booking.getBoundingClientRect().right;
-                const judgeBottom = cells.getBoundingClientRect().bottom+10 > booking.getBoundingClientRect().bottom;
-                if(judgeRight && judgeLeft && judgeTop && judgeBottom){
+                if(this.isInsideFrame(booking)){
                     booking.style.transform = `translate(${calendar.x + this.distanceX}px,${calendar.y + this.distanceY}px)`;
                 } else {
                     this.distanceX = 0;
                     this.distanceY = 0;
                     booking.style.transform = `translate(${0}px,${0}px)`;
-                    this.touchEnd()
+                    this.touchEnd({name: 'detail', params: {id: this.booking.id}})
                 }
             }
         },
-        // touchMove(e){
-        //     if (this.isMouse) {
-        //         let calendar = this.calendar[this.index2][this.index1]
-        //         this.disabled = true;
-        //         const movedDistanceX = e.touches[0].clientX - this.startX
-        //         const movedDistanceY = e.touches[0].clientY - this.startY
-        //         // const distance = this.currentPosition+movedDistance
-        //         this.distanceX = movedDistanceX;
-        //         this.distanceY = movedDistanceY;
-        //         // if(170>distance && distance > -((this.styles.length-3)*340)-170){
-        //         //     }
-        //         const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
-        //         booking.style.transform = `translate(${calendar.x + this.distanceX}px,${calendar.y + this.distanceY}px)`
-        //     }
-        // },
         dragging(e){
             if (this.isMouse) {
-                let calendar = this.calendar[this.index2][this.index1]
-                this.disabled = true;
-                const movedDistanceX = e.clientX - this.startX
-                const movedDistanceY = e.clientY - this.startY
-                const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
-                const cells = this.$refs.cells;
-                this.distanceX = movedDistanceX;
-                this.distanceY = movedDistanceY;
-                const judgeLeft = cells.getBoundingClientRect().left-30 < booking.getBoundingClientRect().left;
-                const judgeTop = cells.getBoundingClientRect().top-10 < booking.getBoundingClientRect().top;
-                const judgeRight = cells.getBoundingClientRect().right+30 > booking.getBoundingClientRect().right;
-                const judgeBottom = cells.getBoundingClientRect().bottom+10 > booking.getBoundingClientRect().bottom;
-                if(judgeRight && judgeLeft && judgeTop && judgeBottom){
-                    booking.style.transform = `translate(${calendar.x + this.distanceX}px,${calendar.y + this.distanceY}px)`;
-                } else {
-                    this.distanceX = 0;
-                    this.distanceY = 0;
-                    booking.style.transform = `translate(${0}px,${0}px)`;
-                    this.dragEnd()
-                }
+                this.moveTag(e)
+            }
+            if (this.isMakeMouse) {
+                this.moveBooking(e)
+            }
+        },
+        moveTag(e){
+            let calendar = this.calendar[this.index2][this.index1]
+            this.disabled = true;
+            const movedDistanceX = e.clientX - this.startX
+            const movedDistanceY = e.clientY - this.startY
+            const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
+            this.distanceX = movedDistanceX;
+            this.distanceY = movedDistanceY;
+            if(this.isInsideFrame(booking)){
+                booking.style.transform = `translate(${calendar.x + this.distanceX}px,${calendar.y + this.distanceY}px)`;
+            } else {
+                this.distanceX = 0;
+                this.distanceY = 0;
+                booking.style.transform = `translate(${0}px,${0}px)`;
+                this.dragEnd()
             }
         },
         touchEnd(root){
@@ -226,25 +310,19 @@ export default {
                 this.disabled = false;
                 this.isMouse = false;
                 if (!check.isCheck&&!check.overBooking) {
-                    calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
-                    calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
-                    booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
                     this.dialogTitle = '予約変更'
                     this.dialogMessage = `以下のように変更しようとしています。確認してください。<br><b>変更前</b>：${this.date(check.from)}～${this.date(check.to+60*1000)}<br><b>変更後</b>：${this.date(check.newFrom)}～${this.date(check.newTo+60*1000)}`
-                    this.dialog = true;
-                    this.changedBooking = Object.assign(this.booking, check)
+                    this.transform(booking, calendar, check)
                 } else if(check.isCheck&&check.overBooking) {
-                    calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
-                    calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
-                    booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
-                    this.dialogTitle = '<h3 style="color:red">ダブルブッキング！！</h3>'
-                    this.dialogMessage = `以下のように変更すると予約が重なってしまいます。確認してください。<br><b>予約1</b>：${this.date(check.overBooking.from)}～${this.date((check.overBooking.to).getTime()+60*1000)}<br><b>予約2</b>：${this.date(check.newFrom)}～${this.date(check.newTo+60*1000)}`
-                    this.dialog = true;
-                    this.changedBooking = Object.assign(booking, check)
+                    //overbooking用
+                    // this.dialogTitle = '<h3 style="color:red">ダブルブッキング！！</h3>'
+                    // this.dialogMessage = `以下のように変更すると予約が重なってしまいます。確認してください。<br><b>予約1</b>：${this.date(check.overBooking.from)}～${this.date((check.overBooking.to).getTime()+60*1000)}<br><b>予約2</b>：${this.date(check.newFrom)}～${this.date(check.newTo+60*1000)}`
+                    // this.transform(booking, calendar, check)
+                    booking.style.transform = `translate(0px,0px)`;
                 } else {
                     booking.style.transform = `translate(0px,0px)`;
                 }
-                booking.style.opacity = 1
+                booking.style.opacity = 0.9
                 this.distanceX = 0;
                 this.distanceY = 0;
             } else {
@@ -253,106 +331,83 @@ export default {
             }
         },
         dragEnd(){
+            if (this.isMouse) {
+                this.endMoveTag()
+            }
+            if (this.isMakeMouse) {
+                this.endMoveBooking()
+            }
+        },
+        endMoveTag(){
             const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
-            const cells = this.$refs.cells;
             let calendar = this.calendar[this.index2][this.index1]
             const check = this.check(Math.round((calendar.x + this.distanceX)/63), Math.round((calendar.y + this.distanceY)/46));
             this.disabled = false;
             this.isMouse = false;
             if (!check.isCheck&&!check.overBooking) {
-                calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
-                calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
-                booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
                 this.dialogTitle = '予約変更'
                 this.dialogMessage = `以下のように変更しようとしています。確認してください。<br><b>変更前</b>：${this.date(check.from)}～${this.date(check.to+60*1000)}<br><b>変更後</b>：${this.date(check.newFrom)}～${this.date(check.newTo+60*1000)}`
-                this.dialog = true;
-                this.changedBooking = Object.assign(this.booking, check)
+                this.transform(booking, calendar, check)
             } else if(check.isCheck&&check.overBooking) {
-                calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
-                calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
-                booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
-                this.dialogTitle = '<h3 style="color:red">ダブルブッキング！！</h3>'
-                this.dialogMessage = `以下のように変更すると予約が重なってしまいます。確認してください。<br><b>予約1</b>：${this.date(check.overBooking.from)}～${this.date((check.overBooking.to).getTime()+60*1000)}<br><b>予約2</b>：${this.date(check.newFrom)}～${this.date(check.newTo+60*1000)}`
-                this.dialog = true;
-                this.changedBooking = Object.assign(booking, check)
+                    //overbooking用
+                    // this.dialogTitle = '<h3 style="color:red">ダブルブッキング！！</h3>'
+                    // this.dialogMessage = `以下のように変更すると予約が重なってしまいます。確認してください。<br><b>予約1</b>：${this.date(check.overBooking.from)}～${this.date((check.overBooking.to).getTime()+60*1000)}<br><b>予約2</b>：${this.date(check.newFrom)}～${this.date(check.newTo+60*1000)}`
+                    // this.transform(booking, calendar, check)
+                booking.style.transform = `translate(0px,0px)`;
             } else {
                 booking.style.transform = `translate(0px,0px)`;
             }
-            booking.style.opacity = 1
+            booking.style.opacity = 0.9
             this.distanceX = 0;
             this.distanceY = 0;
         },
-        // dragEnd(){
-        //     this.disabled = false;
-        //     this.isMouse = false;
-        //     const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
-        //     const cells = this.$refs.cells;
-        //     let calendar = this.calendar[this.index2][this.index1]
-        //     if((cells.getBoundingClientRect().x-20)<booking.getBoundingClientRect().x){
-        //         // calendar.x = calendar.x + this.distanceX;
-        //         // calendar.y = calendar.y + this.distanceY;
-        //         // console.log(Math.round((calendar.x + this.distanceX)/63))
-        //         calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
-        //         calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
-        //         booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
-        //         booking.style.opacity = 1
-        //         this.distanceX = 0;
-        //         this.distanceY = 0;
-        //         this.check(Math.round((calendar.x + this.distanceX)/63), Math.round((calendar.y + this.distanceY)/46));
-        //         // this.$router.go({path: this.$router.currentRoute.path, force: true})
-        //     } else {
-        //         this.distanceX = 0;
-        //         this.distanceY = 0;
-        //         calendar.x  = 0;
-        //         calendar.y  = 0;
-        //         booking.style.transform = `translate(${0}px,${0}px)`;
-        //     }
-        // },
+        transform(booking, calendar, check){
+            calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
+            calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
+            booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
+            this.dialog = true;
+            this.changedBooking = Object.assign(this.booking, check)
+        },
         check(x, y){
-            const from = this.floor(this.booking.from);
-            const to = this.floor(this.booking.to);
-            const newDate = y*24*60*60
-            const newFrom = from + x*30*60 + newDate;
-            const newTo = to + x*30*60 + newDate;
+            const from = this.booking.from;
+            const to = this.booking.to;
+            const newDate = y*24*60*60*1000
+            const newFrom = from + x*30*60*1000 + newDate;
+            const newTo = to + x*30*60*1000 + newDate;
             const condition3 = from !== newFrom;
-            const condition4 = (new Date(newFrom*1000)).getHours()>=10;
+            const condition4 = (new Date(newFrom)).getHours()>=10;
             if (condition3 && condition4) {
                 let bookings = this.bookings.filter((v)=>{
                     return v.id !== this.booking.id
                 })
                 const isCheck = bookings.find((booking)=>{
-                    const condition1 = newFrom <= this.floor(booking.to) && newTo >= this.floor(booking.to);
-                    const condition2 = this.floor(booking.from) < newTo && this.floor(booking.to) >= newTo;
+                    const condition1 = this.floor(newFrom) <= this.floor(booking.to) && this.floor(newTo) >= this.floor(booking.to);
+                    const condition2 = this.floor(booking.from) < this.floor(newTo) && this.floor(booking.to) >= this.floor(newTo);
                     return condition1 || condition2;
                 })
-                return {isCheck: isCheck ? true : false, from: from*1000, to: to*1000, newFrom: newFrom*1000, newTo:newTo*1000,overBooking: isCheck ? isCheck : ''}
+                return {isCheck: isCheck ? true : false, from: from, to: to, newFrom: newFrom, newTo:newTo, overBooking: isCheck ? isCheck : ''}
             } else {
-                return {isCheck: true, from: from*1000, to: to*1000, newFrom: newFrom*1000, newTo:newTo*1000}
+                return {isCheck: true, from: from, to: to, newFrom: newFrom, newTo:newTo}
             }
         },
         floor(time){
-            return Math.floor(time.getTime()/1000)
+            return Math.floor((time)/1000)
+        },
+        isInsideFrame(booking){
+            const cells = this.$refs.cells;
+            const judgeLeft = cells.getBoundingClientRect().left-30 < booking.getBoundingClientRect().left;
+            const judgeTop = cells.getBoundingClientRect().top-10 < booking.getBoundingClientRect().top;
+            const judgeRight = cells.getBoundingClientRect().right+30 > booking.getBoundingClientRect().right;
+            const judgeBottom = cells.getBoundingClientRect().bottom+10 > booking.getBoundingClientRect().bottom;
+            return judgeRight && judgeLeft && judgeTop && judgeBottom ? true : false;
         },
         width(booking, index){
-            const width = (this.$refs.frame[index].getBoundingClientRect().width*(booking.duration/30)-10) + 'px';
+            const width = (this.$refs.frame[0].getBoundingClientRect().width*(booking.duration/30)-10) + 'px';
             return width
-        },
-        sqlToJsDate(sqlDate){
-            var sqlDateArr1 = sqlDate.split("-");
-            var sYear = sqlDateArr1[0];
-            var sMonth = (Number(sqlDateArr1[1]) - 1).toString();
-            var sqlDateArr2 = sqlDateArr1[2].split(" ");
-            var sDay = sqlDateArr2[0];
-            var sqlDateArr3 = sqlDateArr2[1].split(":");
-            var sHour = sqlDateArr3[0];
-            var sMinute = sqlDateArr3[1];
-            var sqlDateArr4 = sqlDateArr3[2].split(".");
-            var sSecond = sqlDateArr4[0];
-            return new Date(sYear,sMonth,sDay,sHour,sMinute,sSecond);
         },
         async makeCalendar(index){
             this.calendar = [];
-            axios.get('https://lnoueryo98.sakura.ne.jp/seasons/api/time').then(response => {
+            axios.get('api/time').then(response => {
                 for (let i = 10*index; i < 10+10*index; i++) {
                     let dates = []
                     for (let j = 0; j < 19; j++) {
@@ -362,7 +417,8 @@ export default {
                         today.setHours(10)
                         today.setMinutes(30*j)
                         today.setSeconds(0)
-                        dates.push({date: today, isBooking: false, x: 0, y: 0});
+                        today.setMilliseconds(0)
+                        dates.push({date: today.getTime(), isBooking: false, x: 0, y: 0});
                     }
                     this.calendar.push(dates)
                 }
@@ -381,15 +437,39 @@ export default {
         isBooking(){
             this.calendar.forEach((date, i) => {
                 date.forEach((time, j) => {
-                    this.bookings.forEach((booking)=>{
+                    this.bookings.forEach((booking, k)=>{
                         if (this.floor(booking.from)==this.floor(time.date)) {
-                            Object.assign(this.calendar[i][j],booking);
+                            this.$set(this.bookings[k], 'from', time.date);
                             this.$set(this.calendar[i][j], 'isBooking', true);
+                            Object.assign(this.calendar[i][j],booking);
                         }
                     })
                 })
             })
         },
+        // isBooking(){ //overbooking用
+        //     this.calendar.forEach((date, i) => {
+        //         date.forEach((time, j) => {
+        //             this.bookings.forEach((booking)=>{
+        //                 if (this.floor(booking.from)==this.floor(time.date)) {
+        //                     Object.assign(this.calendar[i][j],booking);
+        //                     this.$set(this.calendar[i][j], 'isBooking', true);
+        //                     let clazz = Vue.extend(EventTag)
+        //                     let instance = new clazz({
+        //                         router,
+        //                         propsData: {
+        //                             index: i+j*19,
+        //                             booking: booking,
+        //                             frameWidth: this.$refs.frame[i+j*19].getBoundingClientRect(),
+        //                             cells: this.$refs.cells
+        //                         }
+        //                     }).$mount()
+        //                     this.$refs.frame[i+j*19].appendChild(instance.$el)
+        //                 }
+        //             })
+        //         })
+        //     })
+        // },
         bookableDate(index){
             this.calendar.forEach((date, i) => {
                 date.forEach((time, j) => {
@@ -418,12 +498,9 @@ export default {
                 that.ready = false;
             },200)
         },
-        floor(time){
-            return Math.floor(time.getTime()/1000)
-        },
         makeTwoWeeks(index){
             let daysArray = [];
-            axios.get('https://lnoueryo98.sakura.ne.jp/seasons/api/time').then(response => {
+            axios.get('api/time').then(response => {
                 for (let i = 10*index; i < 10+10*index; i++) {
                     const days = new Date(response.data);
                     days.setMonth(days.getMonth())
@@ -481,7 +558,7 @@ export default {
 <style scoped>
     .link{
         position: absolute;
-        background-color: #757575;
+        /* background-color: #757575; */
         overflow:hidden;
         left:5%;
         top:25%;
