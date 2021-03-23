@@ -162,6 +162,21 @@ export default {
             this.bookings.push(response.booking);
             this.isBooking(this.dateIndex);
         });
+        Echo.channel('change-booking')
+        .listen('ChangeBooking',response => {
+            if (this.changedBooking.newFrom !== response.booking.from) {
+                this.booking = this.bookings.find((booking)=>{
+                    return booking.id === response.booking.id;
+                })
+                this.bookings = this.bookings.filter((booking)=>{
+                    return booking.id !== response.booking.id;
+                })
+                // console.log(this.bookings.length)
+                this.checkBooking();
+                this.bookings.push(response.booking);
+                this.isBooking();
+            }
+        });
     },
     methods: {
         closeBookingDialog(){
@@ -217,13 +232,12 @@ export default {
                     return booking.id !== this.booking.id;
                 })
                 this.checkBooking();
+                this.bookings.push(response.data);
+                this.isBooking();
+                this.dialog = false;
+                this.changedBooking = {};
                 // console.log(this.bookings[index])
                 // this.bookings.splice(index, 1)
-                response.data.from = response.data.from;
-                response.data.to = response.data.to;
-                this.bookings.push(response.data);
-                this.isBooking(this.dateIndex);
-                this.dialog = false
             })
         },
         checkBooking(){
@@ -232,7 +246,8 @@ export default {
                     if (this.floor(this.booking.from)==this.floor(time.date)) {
                         const calendar = this.calendar[i][j];
                         const newCell = {date: calendar.date, isBooking: false, x: 0, y: 0}
-                        this.calendar[i].splice(j, 1, newCell)
+                        // this.calendar[i].splice(j, 1, newCell)
+                        this.$set(this.calendar[i],j,newCell)
                     }
                 })
             })
