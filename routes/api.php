@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Route;
+use Carbon\Carbon;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -13,8 +13,20 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
-Route::get('/booking/{id}', 'CalendarController@show');
+Route::get('/time', function(){
+    return Carbon::now();
+});
+Route::resource('booking', 'BookingController', ['except' => ['index', 'create', 'edit', 'show']]);
+Route::resource('payment', 'PaymentController', ['except' => ['index', 'create', 'edit']]);
+// Route::get('user/{id}', function ($id) {
+//     //
+// })->where('id', '[0-9]+');
+Route::get('/booking/{sid}', 'BookingController@index');
+// Route::get('/booking/create', 'BookingController@create');
+// Route::post('/booking', 'BookingController@store');
+Route::get('/booking/{sid}/{id}', 'BookingController@show');
+// Route::post('/booking/{id}/edit', 'BookingController@edit');
+// Route::put('/booking/{id}', 'BookingController@update');
+// Route::delete('/booking/{id}', 'BookingController@destroy');
+// Route::get('/booking/{sid}/{id}', 'CalendarController@show');

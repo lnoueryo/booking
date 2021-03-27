@@ -1,5 +1,5 @@
 <?php
-
+use App\Staff;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -10,11 +10,20 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/api/check', function(){
+    if(Auth::check()){
+        $user = Staff::with(['shop'])->find(Auth::id());
+        return $user;
+    } else {
+        return;
+    }
+});
+Auth::routes();
+
 
 Route::get('/{any?}', function () {
     return view('welcome');
 })->where('any','^(?!api\/)[\/\w\.-]*');
 
-Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
