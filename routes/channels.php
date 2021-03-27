@@ -1,5 +1,5 @@
 <?php
-
+use Illuminate\Support\Facades\Auth;
 /*
 |--------------------------------------------------------------------------
 | Broadcast Channels
@@ -15,6 +15,9 @@
 //     return (int) $user->id === (int) $id;
 // });
 Broadcast::channel('new-booking', function () {
+    return true;
+});
+Broadcast::channel('change-booking', function () {
     return true;
 });
 
