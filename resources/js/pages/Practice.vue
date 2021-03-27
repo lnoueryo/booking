@@ -2,8 +2,8 @@
     <div>
         <div class="d-flex text-center">
             <div style="width: 100%;">
-                <transition name="fade">
-                    <div ref="calendar" class="text-center d-flex">
+                <transition name="calendar" mode="out-in">
+                    <div ref="calendar" class="text-center d-flex" v-show="ready" style="height: 520px">
                         <div>
                             <div style="border: 1px solid #e0e0e0;color: #000;">Date\Time</div>
                             <div v-for="(c, i) in calendar" :key="i">
@@ -20,20 +20,33 @@
                             <div style="position:absolute;left:0;right:0;top:0;bottom:0;z-index:0" @mousemove="dragging($event)" @mouseleave="dragEnd" @mouseup="dragEnd" @touchmove="touchMove($event)" @touchend="dragEnd" :style="{display: 'block', zIndex: disabled?2:0}"></div>
                                 <div v-for="(c, i) in calendar" :key="i" class="d-flex">
                                     <div class="frame" ref="frame" v-for="(time, j) in c" :key="j">
-                                        <router-link
+                                        <!-- <div v-if="time.isBooking" class="link"><router-link
                                         @mousedown.native="dragStart($event);index1=j;index2=i;booking=time"
                                         @touchstart.native.prevent="touchStart($event);index1=j;index2=i;booking=time"
                                         @touchmove.native="touchMove($event)"
                                         @touchend.native="touchEnd({name: 'detail', params: {id: time.id}})"
-                                        tag="button" class="link" ref="booking"
+                                        tag="button" ref="booking"
                                         :to="{name: 'detail', params: {id: time.id}}"
-                                        :style="{width: width(time, j+i*19),transform: '',backgroundColor: time.is_read==false?'#4C64D3':'#757575'}"
+                                        :style="{width: width(time, j+i*19),transform: '',backgroundColor: time.status==false?'#4C64D3':'#757575',borderRadius: '5px'}"
+                                        :disabled="disabled"
+                                        >
+                                        <span>{{time.user.last_name}} {{time.user.first_name}}</span>
+                                        </router-link><v-badge color="red darken-1" offset-x="7" offset-y="-11" dot content overlap style="z-index:10" v-if="time.payment.paid"></v-badge></div> -->
+                                        <router-link
+                                        @mousedown.native="dragStart($event);index1=j;index2=i;booking=time"
+                                        @touchstart.native.prevent="touchStart($event);index1=j;index2=i;booking=time"
+                                        @touchmove.native="touchMove($event)"
+                                        @touchend.native="touchEnd({name: 'detail', params: {sid: time.shop_id, id: time.id}})"
+                                        tag="button" class="link" ref="booking"
+                                        :to="{name: 'detail', params: {sid: time.shop_id, id: time.id}}"
+                                        :style="{width: width(time, j+i*19),transform: '',backgroundColor: time.status==false?'#4C64D3':'#757575'}"
                                         :disabled="disabled"
                                         v-if="time.isBooking"
-                                        >
-                                        <span>{{time.user.name}}</span>
+                                        ><div style="position: absolute;right:-3px;top:-3px;width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div>
+                                        <span>{{time.user.last_name}} {{time.user.first_name}}</span>
+                                        <!-- <div style="position: absolute;right:-3px;top:-3px;width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div> -->
                                         </router-link>
-                                        <div @mousedown="make($event, time);index1=j;index2=i;" @click="touchMake(time);index1=j;index2=i;booking=time" @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="width: 100%;height: 100%;" v-else></div>
+                                        <div @mousedown.left="make($event, time);index1=j;index2=i;" @click="touchMake(time);index1=j;index2=i;booking=time" @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="width: 100%;height: 100%;" v-else></div>
                                         <!-- <div @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="padding: 10px 0"><b>&nbsp;&nbsp;</b></div> -->
                                     </div>
                                 </div>
@@ -69,6 +82,12 @@
                 <v-card-text>
                     <v-container>
                         <v-row>
+                            <v-col ols="12" sm="6">
+                                <v-text-field label="開始時間" required :value="new Date(booking.from)"></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                                <v-text-field label="終了時間" required :value="new Date(booking.from+booking.duration*60*1000-1)"></v-text-field>
+                            </v-col>
                             <v-col cols="12" sm="6" md="4">
                                 <v-text-field label="Legal first name*" required></v-text-field>
                             </v-col>
@@ -84,12 +103,6 @@
                             <v-col cols="12">
                                 <v-text-field label="Password*" type="password" required></v-text-field>
                             </v-col>
-                            <v-col ols="12" sm="6">
-                                <v-select :items="['0-17', '18-29', '30-54', '54+']" label="Age*" required></v-select>
-                            </v-col>
-                            <v-col cols="12" sm="6">
-                                <v-autocomplete :items="['Skiing', 'Ice hockey', 'Soccer', 'Basketball', 'Hockey', 'Reading', 'Writing', 'Coding', 'Basejump']" label="Interests" multiple></v-autocomplete>
-                            </v-col>
                         </v-row>
                     </v-container>
                     <small>*indicates required field</small>
@@ -99,7 +112,7 @@
                     <v-btn color="blue darken-1" text @click="closeBookingDialog">
                         Close
                     </v-btn>
-                    <v-btn color="blue darken-1" text @click="closeBookingDialog">
+                    <v-btn color="blue darken-1" text @click="saveBookingDialog">
                         Save
                     </v-btn>
                 </v-card-actions>
@@ -118,6 +131,7 @@ export default {
             bookings: [],
             booking: '',
             changedBooking: '',
+            newBooking: {},
             periods: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30','19:00'],
             days: this.makeTwoWeeks(0),
             dateIndex: 0,
@@ -151,34 +165,44 @@ export default {
         endDate.setHours(0);
         endDate.setMinutes(0);
         endDate.setSeconds(0);
-        const response = await (axios.get('api/booking'));
+        const response = await (axios.get(`/api/booking/${this.$route.params.sid}`));
         const bookings = response.data;
+        console.log(bookings)
         for (let i = 0; i < bookings.length; i++) {
             await this.bookings.push(bookings[i]);
         }
         this.makeCalendar(0);
-        Echo.channel('new-booking')
-        .listen('NewBooking',response => {
-            this.bookings.push(response.booking);
-            this.isBooking(this.dateIndex);
-        });
-        Echo.channel('change-booking')
-        .listen('ChangeBooking',response => {
-            if (this.changedBooking.newFrom !== response.booking.from) {
-                this.booking = this.bookings.find((booking)=>{
-                    return booking.id === response.booking.id;
-                })
-                this.bookings = this.bookings.filter((booking)=>{
-                    return booking.id !== response.booking.id;
-                })
-                // console.log(this.bookings.length)
-                this.checkBooking();
+        Echo.private('new-booking')
+        .listen('NewBooking', response => {
+            if(response.booking.shop_id == this.$route.params.sid){
                 this.bookings.push(response.booking);
-                this.isBooking();
+                this.isBooking(this.dateIndex);
+            }
+        });
+        Echo.private('change-booking')
+        .listen('ChangeBooking',response => {
+            if(response.booking.shop_id == this.$route.params.sid){
+                if (this.changedBooking.newFrom !== response.booking.from) {
+                    this.booking = this.bookings.find((booking)=>{
+                        return booking.id === response.booking.id;
+                    })
+                    this.bookings = this.bookings.filter((booking)=>{
+                        return booking.id !== response.booking.id;
+                    })
+                    this.checkBooking();
+                    this.bookings.push(response.booking);
+                    this.isBooking();
+                }
             }
         });
     },
+    beforeDestroy(){
+        clearTimeout(this.touchJudge);
+    },
     methods: {
+        saveBookingDialog(){
+            this.bookingDialog = false;
+        },
         closeBookingDialog(){
             this.bookingDialog = false;
             this.checkBooking()
@@ -186,13 +210,13 @@ export default {
             this.isBooking(this.dateIndex);
         },
         touchMake(booking){
-            this.booking = Object.assign(booking,{user: {name: 'new'},isBooking: true,duration: 30,from:booking.date});
+            this.booking = Object.assign(booking,{user: {last_name: 'new', first_name: ''},isBooking: true,duration: 30,from:booking.date});
             this.bookings.push(this.booking);
             this.isBooking();
             this.bookingDialog = true;
         },
         make(e,booking){
-            this.booking = Object.assign(booking,{user: {name: 'new'},isBooking: true,duration: 30,from:booking.date});
+            this.booking = Object.assign(booking,{user: {last_name: 'new', first_name: ''},isBooking: true,duration: 30,from:booking.date},{payment: {paid: false}});
             this.bookings.push(this.booking);
             this.isBooking();
             this.isMakeMouse = true;
@@ -226,7 +250,7 @@ export default {
         },
         changeTime(){
             const params = {from: this.changedBooking.newFrom, to: this.changedBooking.newTo}
-            axios.put(`api/booking/${this.booking.id}`,params)
+            axios.put(`/api/booking/${this.booking.id}`,params)
             .then((response)=>{
                 this.bookings = this.bookings.filter((booking)=>{
                     return booking.id !== this.booking.id;
@@ -287,7 +311,7 @@ export default {
                     this.distanceX = 0;
                     this.distanceY = 0;
                     booking.style.transform = `translate(${0}px,${0}px)`;
-                    this.touchEnd({name: 'detail', params: {id: this.booking.id}})
+                    this.touchEnd({name: 'detail', params: {sid: this.$route.params.sid, id: this.booking.id}})
                 }
             }
         },
@@ -417,12 +441,12 @@ export default {
             return judgeRight && judgeLeft && judgeTop && judgeBottom ? true : false;
         },
         width(booking, index){
-            const width = (this.$refs.frame[0].getBoundingClientRect().width*(booking.duration/30)-10) + 'px';
+            const width = (this.$refs.frame[0].getBoundingClientRect().width*(booking.duration/30)-6) + 'px';
             return width
         },
         async makeCalendar(index){
             this.calendar = [];
-            axios.get('api/time').then(response => {
+            axios.get('/api/time').then(response => {
                 for (let i = 10*index; i < 10+10*index; i++) {
                     let dates = []
                     for (let j = 0; j < 19; j++) {
@@ -510,12 +534,12 @@ export default {
             })
             let that = this;
             setTimeout(function(){
-                that.ready = false;
+                that.ready = true;
             },200)
         },
         makeTwoWeeks(index){
             let daysArray = [];
-            axios.get('api/time').then(response => {
+            axios.get('/api/time').then(response => {
                 for (let i = 10*index; i < 10+10*index; i++) {
                     const days = new Date(response.data);
                     days.setMonth(days.getMonth())
@@ -526,14 +550,14 @@ export default {
             return daysArray;
         },
         nextWeek(){
-            this.ready = true;
+            this.ready = false;
             this.calendar = [];
             this.dateIndex+=1;
             this.days = this.makeTwoWeeks(this.dateIndex);
             this.makeCalendar(this.dateIndex)
         },
         previousWeek(){
-            this.ready = true;
+            this.ready = false;
             this.calendar = [];
             this.dateIndex-=1;
             this.days = this.makeTwoWeeks(this.dateIndex);
@@ -574,7 +598,7 @@ export default {
     .link{
         position: absolute;
         /* background-color: #757575; */
-        overflow:hidden;
+        /* overflow:hidden; */
         left:5%;
         top:25%;
         z-index:1;

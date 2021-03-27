@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <script src="{{ asset('js/app.js') }}"defer></script>
+        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
         <title>Laravel</title>
 
         <!-- Fonts -->
@@ -19,7 +20,7 @@
     </head>
     <body>
         <div id="app" v-cloak>
-            <v-app>
+            <v-app style="background: radial-gradient(circle 700px at center, #57f6fe00 0%, #30c6ec42 90%, #46adf753 100%);">
                 <index></index>
             </v-app>
         </div>
