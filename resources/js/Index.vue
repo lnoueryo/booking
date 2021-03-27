@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-resize="onResize">
         <transition name="fade">
             <div v-show="ready">
                 <router-view name="header"></router-view>
@@ -20,14 +20,23 @@
 export default {
     data() {
         return {
-            ready: false
+            ready: false,
+            windowSize: {
+                x: 0,
+                y: 0,
+            },
         }
     },
-    mounted(){},
+    mounted () {
+        this.onResize()
+    },
     methods:{
         load(){
             this.ready = true
-        }
+        },
+        onResize () {
+            this.$store.dispatch('windowSize', { x: window.innerWidth, y: window.innerHeight });
+        },
     },
     async beforeCreate(){
         const session = (await axios.get('/api/check')).data;

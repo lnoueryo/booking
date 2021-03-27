@@ -7,7 +7,8 @@ Vue.use(Vuex);
 export default new Vuex.Store({
     state: {
         user: {},
-        ready: false
+        ready: false,
+        windowSize: {}
     },
     mutations: {
         user(state, payload) {
@@ -17,8 +18,14 @@ export default new Vuex.Store({
         ready(state, payload) {
             state.ready = payload;
         },
+        windowSize(state, payload){
+            state.windowSize = Object.assign({}, state.windowSize, payload);
+        }
     },
     actions: {
+        windowSize(context, payload){
+            context.commit('windowSize', payload)
+        },
         loadUser(context) {
             const user = localStorage.getItem('user');
             if(user){
