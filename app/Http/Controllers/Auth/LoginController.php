@@ -7,6 +7,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Support\Facades\Auth;
 use App\Staff;
+use App\Events\Login;
 class LoginController extends Controller
 {
     /*
@@ -41,6 +42,7 @@ class LoginController extends Controller
     protected function authenticated()
     {
         $user = Staff::with(['shop'])->find(Auth::id());
+        event(new Login($user));
         return $user;
     }
 }

@@ -20,4 +20,7 @@ Broadcast::channel('new-booking', function () {
 Broadcast::channel('change-booking', function () {
     return true;
 });
+Broadcast::channel('login', function () {
+    return true;
+});
 

@@ -41,6 +41,16 @@ export default new Vuex.Store({
                 localStorage.setItem('user', JSON.stringify(response.data))
                 context.commit('user', response.data)
                 context.commit('ready', true)
+                const fullName = response.data.last_name + response.data.first_name
+                Push.create(`ログイン`,{
+                    body: fullName+'さんがログインしました',
+                    icon: '/images/logo/logo01.png',
+                    timeout: 30000,
+                    onClick: function () {
+                        window.focus();
+                        this.close();
+                    }
+                })
                 window.location.href = `/home/${response.data.shop_id}`;
             })
             // .error((err)=>{console.log(err)})
