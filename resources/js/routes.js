@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
 import Booking from './pages/Booking';
-import Practice from './pages/Home';
+import Home from './pages/Home';
 import Detail from './pages/Detail';
 import Login from './pages/Login';
 import ErrorComponent from './pages/Error';
@@ -15,7 +15,7 @@ const routes = [
     {
         path: '/home/:sid',
         components: {
-            default: Practice,
+            default: Home,
             header: Header
         },
         name: 'home',

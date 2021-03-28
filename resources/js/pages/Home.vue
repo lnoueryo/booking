@@ -41,28 +41,28 @@
                                         :to="{name: 'detail', params: {sid: time.shop_id, id: time.id}}"
                                         :style="{width: width(time, j+i*19),transform: '',backgroundColor: time.status==false?'#4C64D3':'#757575'}"
                                         :disabled="disabled"
-                                        v-if="(new Date()).getTime()<time.to && time.isBooking"
-                                        ><div style="position: absolute;right:-3px;top:-3px;width:100%;max-width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div>
-                                        <div style="overflow: hidden;"><span>{{time.user.last_name}} {{time.user.first_name}}</span></div>
+                                        v-if="time.isBooking&&(new Date()).getTime()<time.from"
+                                        ><div style="position: absolute;right:-3px;top:-3px;width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div>
+                                        <span>{{time.user.last_name}} {{time.user.first_name}}</span>
                                         </router-link>
+
                                         <router-link
-                                        class="link" ref="booking"
+                                        tag="button" class="link" ref="booking"
                                         :to="{name: 'detail', params: {sid: time.shop_id, id: time.id}}"
                                         :style="{width: width(time, j+i*19),transform: '',backgroundColor: '#75757550'}"
-                                        v-else-if="(new Date()).getTime()>time.to"
-                                        ><div style="position: absolute;right:-3px;top:-3px;width:100%;max-width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div>
-                                        <div style="overflow: hidden;"><span>{{time.user.last_name}} {{time.user.first_name}}</span></div>
+                                        v-else-if="time.isBooking&&(new Date()).getTime()>time.from"
+                                        ><div style="position: absolute;right:-3px;top:-3px;width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div>
+                                        <span>{{time.user.last_name}} {{time.user.first_name}}</span>
                                         </router-link>
                                         <div @mousedown.left="make($event, time);index1=j;index2=i;" @click="touchMake(time);index1=j;index2=i;booking=time" @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="width: 100%;height: 100%;" v-else></div>
-                                        <!-- <div @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="padding: 10px 0"><b>&nbsp;&nbsp;</b></div> -->
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </transition>
-                <v-btn @click="previousWeek">back</v-btn>
-                <v-btn @click="nextWeek">next</v-btn>
+                <v-btn @click="previousWeek" :disabled="!ready">back</v-btn>
+                <v-btn @click="nextWeek" :disabled="!ready">next</v-btn>
             </div>
         </div>
         <v-dialog v-model="dialog" max-width="400">
@@ -89,20 +89,20 @@
                 <v-card-text>
                     <v-container>
                         <v-row>
-                            <v-col ols="12" sm="6">
-                                <v-text-field label="開始時間" required :value="new Date(booking.from)"></v-text-field>
+                            <v-col ols="12" sm="4">
+                                <v-text-field label="開始時間" required :value="newBookingDate(newBookingTime())"></v-text-field>
                             </v-col>
-                            <v-col cols="12" sm="6">
-                                <v-text-field label="終了時間" required :value="new Date(booking.from+booking.duration*60*1000-1)"></v-text-field>
+                            <v-col cols="12" sm="4">
+                                <v-text-field label="終了時間" required :value="newBookingDate(newBookingTime()+booking.duration*60*1000-1)"></v-text-field>
                             </v-col>
-                            <v-col cols="12" sm="6" md="4">
-                                <v-text-field label="Legal first name*" required></v-text-field>
+                            <v-col cols="12" sm="4">
+                                <v-text-field label="合計時間" required :value="booking.duration"></v-text-field>
                             </v-col>
-                            <v-col cols="12" sm="6" md="4">
-                                <v-text-field label="Legal middle name" hint="example of helper text only on focus"></v-text-field>
+                            <v-col cols="12" sm="6" md="6">
+                                <v-text-field label="first name*" required></v-text-field>
                             </v-col>
-                            <v-col cols="12" sm="6" md="4">
-                                <v-text-field label="Legal last name*" hint="example of persistent helper text" persistent-hint required></v-text-field>
+                            <v-col cols="12" sm="6" md="6">
+                                <v-text-field label="last name*" hint="example of persistent helper text" persistent-hint required></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="Email*" required></v-text-field>
@@ -159,32 +159,30 @@ export default {
             dialog: false,
             dialogTitle: '',
             dialogMessage: '',
-            bookingDialog: false
+            bookingDialog: false,
+            num: 0,
+            windowTime: ''
         }
     },
     computed:{
-        windowSize(){
-            return this.$store.state.windowSize;
+        windowSizeX(){
+            return this.$store.state.windowSize.x;
+        },
+    },
+    watch: {
+        windowSizeX:{
+            handler(){
+                clearInterval(this.windowTime);
+                this.resetBooking(this.dateIndex);
+                let that = this;
+                this.windowTime = setTimeout(function(){that.makeCalendar(that.dateIndex);},300);
+            },
+            immidiate: false
         }
     },
-    // watch:{
-    //     windowSize(){
-    //         this.width()
-    //     }
-    // },
     async created(){
-        const startDate = new Date();
-        startDate.setHours(0);
-        startDate.setMinutes(0);
-        startDate.setSeconds(0);
-        let endDate = new Date();
-        endDate.setDate(endDate.getDate()+29);
-        endDate.setHours(0);
-        endDate.setMinutes(0);
-        endDate.setSeconds(0);
         const response = await (axios.get(`/api/booking/${this.$route.params.sid}`));
         const bookings = response.data;
-        console.log(bookings)
         for (let i = 0; i < bookings.length; i++) {
             await this.bookings.push(bookings[i]);
         }
@@ -237,6 +235,40 @@ export default {
         clearTimeout(this.touchJudge);
     },
     methods: {
+        resetBooking(index){
+            for (let i = 10*index; i < 10+10*index; i++) {
+                for (let j = 0; j < 19; j++) {
+                    const newCell = {isBooking: false}
+                    this.$set(this.calendar[i],j,newCell)
+                }
+            }
+        },
+        newBookingDate(time){
+            let changedFormat = new Date(time*1);
+            const day = ['日', '月', '火', '水', '木', '金', '土']
+            changedFormat.setMonth(changedFormat.getMonth()+1)
+            const month = changedFormat.getMonth()===0 ? 12 : changedFormat.getMonth();
+            const date = changedFormat.getDate();
+            const dayNum = changedFormat.getDay();
+            const hours = changedFormat.getHours();
+            let minutes;
+            if (changedFormat.getMinutes()>=10) {
+                minutes = changedFormat.getMinutes();
+            } else {
+                minutes = '0' + changedFormat.getMinutes()
+            }
+            let seconds;
+            if (changedFormat.getSeconds()>=10) {
+                seconds = changedFormat.getSeconds();
+            } else {
+                seconds = '0' + changedFormat.getSeconds()
+            }
+            const newFormat = `${month}月${date}日(${day[dayNum]}) ${hours}:${minutes}:${seconds}`
+            return newFormat;
+        },
+        newBookingTime(){
+            return this.booking.from-(this.num*(this.booking.duration-30)*60*1000)
+        },
         saveBookingDialog(){
             this.bookingDialog = false;
         },
@@ -253,6 +285,7 @@ export default {
             this.bookingDialog = true;
         },
         make(e,booking){
+            this.num=0;
             this.booking = Object.assign(booking,{user: {last_name: 'new', first_name: ''},isBooking: true,duration: 30,from:booking.date},{payment: {paid: false}});
             this.bookings.push(this.booking);
             this.isBooking();
@@ -265,18 +298,28 @@ export default {
             const movedDistanceX = e.clientX - this.startX
             const booking = this.bookings[this.bookings.length-1];
             this.distanceX = movedDistanceX;
-            if((30+(Math.round((this.distanceX)/63))*30) !== booking.duration){
+            if((30+(Math.round((this.distanceX)/this.$refs.frame[0].getBoundingClientRect().width))*30) !== booking.duration){
                 const frame = this.$refs.frame[this.index1 + this.index2*19];
-                let duration = 30+(Math.round((this.distanceX)/63))*30;
+                let duration = 30+(Math.round((this.distanceX)/this.$refs.frame[0].getBoundingClientRect().width))*30;
                 if (duration>1) {
                     frame.children[0].style.width = (frame.getBoundingClientRect().width*Math.sqrt(Math.pow(duration, 2))/30-10) + 'px';
                     this.$set(booking, 'duration', duration);
+                    if(this.num==1){
+                        frame.children[0].style.transform = `translate(0px,0)`
+                        this.num=0
+                    }
                     } else {
-                    duration-=60
+                        this.num=1
+                        duration-=60
                     frame.children[0].style.width = (frame.getBoundingClientRect().width*Math.sqrt(Math.pow(duration, 2))/30-10) + 'px';
                     this.$set(booking, 'duration', Math.sqrt(Math.pow(duration, 2)));
-                    duration+=30
-                    frame.children[0].style.transform = `translate(${frame.getBoundingClientRect().width*duration/30}px,0)`
+                    if(duration!==-60){
+                        duration+=30
+                        frame.children[0].style.transform = `translate(${frame.getBoundingClientRect().width*duration/30}px,0)`
+                    } else {
+                        duration+=30
+                        frame.children[0].style.transform = `translate(${frame.getBoundingClientRect().width*duration/30}px,0)`
+                    }
                 }
             }
         },
@@ -477,7 +520,7 @@ export default {
             const judgeBottom = cells.getBoundingClientRect().bottom+10 > booking.getBoundingClientRect().bottom;
             return judgeRight && judgeLeft && judgeTop && judgeBottom ? true : false;
         },
-        width(booking){
+        width(booking, index){
             // const width = booking.duration/30*100 + '%';
             // const ration = this.$refs.frame[0].getBoundingClientRect().width/(this.$refs.frame[0].getBoundingClientRect().width-1)-0.004;
             // console.log(ration)
@@ -632,15 +675,6 @@ export default {
             const newFormat = `${month}月${date}日(${day[dayNum]}) ${hours}:${minutes}:${seconds}`
             return newFormat;
         },
-        // status(booking){
-        //     const now = new Date;
-        //     now.getTime()
-        //     if(now<booking.to){
-        //         return booking.status==false ? '#4C64D3':'#757575'
-        //     } else {
-        //         return '#75757550'
-        //     }
-        // }
     }
 }
 </script>
@@ -649,6 +683,7 @@ export default {
     .link{
         position: absolute;
         /* background-color: #757575; */
+        /* overflow:hidden; */
         left:5%;
         top:25%;
         z-index:1;
@@ -673,6 +708,5 @@ export default {
         position: relative;
         width:100%;
         height: 46px;
-        box-sizing: border-box;
     }
 </style>
