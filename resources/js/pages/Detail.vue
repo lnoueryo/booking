@@ -9,7 +9,7 @@
                     <h4>作成日<br>{{date(booking.created_at)}}</h4>
                 </div>
             </div>
-            <div class="d-flex" style="align-items:center;margin:auto">
+            <div class="d-flex" style="align-items:center;margin:auto;max-width: 450px;">
                 <h4 style="margin:0 3%;min-width:80px;">合計金額<br><div class="text-right"><span>{{price}}</span><span>円</span></div></h4>
                 <v-col cols="6">
                 <v-select v-model="select" :items="items" item-text="status" label="Select" persistent-hint return-object single-line @input="hello"></v-select>

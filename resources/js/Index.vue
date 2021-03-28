@@ -46,6 +46,14 @@ export default {
         } else if(!session && user) {
             this.$store.dispatch('logout')
         }
+        // Push.create('ログインが完了しました',{
+        //     icon: '/images/logo/logo01.png',
+        //     timeout: 30000,
+        //     onClick: function () {
+        //         window.focus();
+        //         this.close();
+        //     }
+        // })
     }
 }
 </script>

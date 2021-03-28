@@ -3,7 +3,7 @@
         <div class="d-flex text-center">
             <div style="width: 100%;">
                 <transition name="calendar" mode="out-in">
-                    <div ref="calendar" class="text-center d-flex" v-show="ready" style="height: 520px">
+                    <div ref="calendar" class="text-center d-flex" v-show="ready" style="height: 520px;width:100%;">
                         <div>
                             <div style="border: 1px solid #e0e0e0;color: #000;">Date\Time</div>
                             <div v-for="(c, i) in calendar" :key="i">
@@ -12,7 +12,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div>
+                        <div style="width:100%;">
                             <div class="d-flex text-center">
                                 <div class="period" v-for="(period , i) in periods" :key="i"><span>{{ period }}</span></div>
                             </div>
@@ -41,10 +41,17 @@
                                         :to="{name: 'detail', params: {sid: time.shop_id, id: time.id}}"
                                         :style="{width: width(time, j+i*19),transform: '',backgroundColor: time.status==false?'#4C64D3':'#757575'}"
                                         :disabled="disabled"
-                                        v-if="time.isBooking"
-                                        ><div style="position: absolute;right:-3px;top:-3px;width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div>
-                                        <span>{{time.user.last_name}} {{time.user.first_name}}</span>
-                                        <!-- <div style="position: absolute;right:-3px;top:-3px;width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div> -->
+                                        v-if="(new Date()).getTime()<time.to && time.isBooking"
+                                        ><div style="position: absolute;right:-3px;top:-3px;width:100%;max-width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div>
+                                        <div style="overflow: hidden;"><span>{{time.user.last_name}} {{time.user.first_name}}</span></div>
+                                        </router-link>
+                                        <router-link
+                                        class="link" ref="booking"
+                                        :to="{name: 'detail', params: {sid: time.shop_id, id: time.id}}"
+                                        :style="{width: width(time, j+i*19),transform: '',backgroundColor: '#75757550'}"
+                                        v-else-if="(new Date()).getTime()>time.to"
+                                        ><div style="position: absolute;right:-3px;top:-3px;width:100%;max-width: 8px;height: 8px;border-radius:50%;background-color:red;" v-if="!time.payment.paid"></div>
+                                        <div style="overflow: hidden;"><span>{{time.user.last_name}} {{time.user.first_name}}</span></div>
                                         </router-link>
                                         <div @mousedown.left="make($event, time);index1=j;index2=i;" @click="touchMake(time);index1=j;index2=i;booking=time" @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="width: 100%;height: 100%;" v-else></div>
                                         <!-- <div @mousemove="dragging($event)" @touchmove="touchMove($event)" ref="dev" style="padding: 10px 0"><b>&nbsp;&nbsp;</b></div> -->
@@ -155,6 +162,16 @@ export default {
             bookingDialog: false
         }
     },
+    computed:{
+        windowSize(){
+            return this.$store.state.windowSize;
+        }
+    },
+    // watch:{
+    //     windowSize(){
+    //         this.width()
+    //     }
+    // },
     async created(){
         const startDate = new Date();
         startDate.setHours(0);
@@ -177,6 +194,16 @@ export default {
             if(response.booking.shop_id == this.$route.params.sid){
                 this.bookings.push(response.booking);
                 this.isBooking(this.dateIndex);
+                const fullName = response.booking.user.last_name + '　' + response.booking.user.first_name
+                Push.create('新しい予約が入りました',{
+                    body: fullName+'様',
+                    icon: '/images/logo/logo01.png',
+                    timeout: 30000,
+                    onClick: function () {
+                        window.focus();
+                        this.close();
+                    }
+                })
             }
         });
         Echo.private('change-booking')
@@ -192,6 +219,16 @@ export default {
                     this.checkBooking();
                     this.bookings.push(response.booking);
                     this.isBooking();
+                    const fullName = response.booking.user.last_name + '　' + response.booking.user.first_name
+                    Push.create('予約変更がありました',{
+                        body: fullName+'様',
+                        icon: '/images/logo/logo01.png',
+                        timeout: 30000,
+                        onClick: function () {
+                            window.focus();
+                            this.close();
+                        }
+                    })
                 }
             }
         });
@@ -440,7 +477,12 @@ export default {
             const judgeBottom = cells.getBoundingClientRect().bottom+10 > booking.getBoundingClientRect().bottom;
             return judgeRight && judgeLeft && judgeTop && judgeBottom ? true : false;
         },
-        width(booking, index){
+        width(booking){
+            // const width = booking.duration/30*100 + '%';
+            // const ration = this.$refs.frame[0].getBoundingClientRect().width/(this.$refs.frame[0].getBoundingClientRect().width-1)-0.004;
+            // console.log(ration)
+            // const width = ration*booking.duration/30*100 + '%';
+
             const width = (this.$refs.frame[0].getBoundingClientRect().width*(booking.duration/30)-6) + 'px';
             return width
         },
@@ -590,6 +632,15 @@ export default {
             const newFormat = `${month}月${date}日(${day[dayNum]}) ${hours}:${minutes}:${seconds}`
             return newFormat;
         },
+        // status(booking){
+        //     const now = new Date;
+        //     now.getTime()
+        //     if(now<booking.to){
+        //         return booking.status==false ? '#4C64D3':'#757575'
+        //     } else {
+        //         return '#75757550'
+        //     }
+        // }
     }
 }
 </script>
@@ -598,7 +649,6 @@ export default {
     .link{
         position: absolute;
         /* background-color: #757575; */
-        /* overflow:hidden; */
         left:5%;
         top:25%;
         z-index:1;
@@ -612,7 +662,9 @@ export default {
         border-bottom: 1px solid #e0e0e0;
         border-right: 1px solid #e0e0e0;
         border-top: 1px solid #e0e0e0;
-        width:63px;
+        max-width:63px;
+        width: 100%;
+        overflow: hidden;
     }
     .frame{
         border-right: 1px solid #e0e0e0;
@@ -621,5 +673,6 @@ export default {
         position: relative;
         width:100%;
         height: 46px;
+        box-sizing: border-box;
     }
 </style>

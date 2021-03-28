@@ -7,40 +7,42 @@
                         <div class="card-header">Login</div>
 
                         <div class="card-body">
-                            <div class="form-group row">
-                                <label for="shop_id" class="col-md-4 col-form-label text-md-right">店舗ID</label>
+                            <v-form ref="form">
+                                <div class="form-group row">
+                                    <label for="shop_id" class="col-md-4 col-form-label text-md-right">店舗ID</label>
 
-                                <div class="col-md-6">
-                                    <input id="shop_id" type="text" class="form-control" name="shop_id" required autocomplete="shop_id" autofocus v-model="auth.shop_id">
+                                    <div class="col-md-6">
+                                        <input @keyup.enter="login" id="shop_id" type="text" class="form-control" name="shop_id" required autocomplete="shop_id" autofocus v-model="auth.shop_id">
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="form-group row">
-                                <label for="email" class="col-md-4 col-form-label text-md-right">メール</label>
+                                <div class="form-group row">
+                                    <label for="email" class="col-md-4 col-form-label text-md-right">メール</label>
 
-                                <div class="col-md-6">
-                                    <input id="email" type="email" class="form-control" name="email" required autocomplete="email" autofocus v-model="auth.email">
+                                    <div class="col-md-6">
+                                        <input @keyup.enter="login" id="email" type="email" class="form-control" name="email" required autocomplete="email" autofocus v-model="auth.email">
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="form-group row">
-                                <label for="password" class="col-md-4 col-form-label text-md-right">パスワード</label>
+                                <div class="form-group row">
+                                    <label for="password" class="col-md-4 col-form-label text-md-right">パスワード</label>
 
-                                <div class="col-md-6">
-                                    <input id="password" type="password" class="form-control" name="password" required autocomplete="current-password" v-model="auth.password">
+                                    <div class="col-md-6">
+                                        <input @keyup.enter="login" id="password" type="password" class="form-control" name="password" required autocomplete="current-password" v-model="auth.password">
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="form-group row">
-                                <div class="col-md-8 offset-md-4">
-                                    <v-btn class="btn primary" @click="login">
-                                        Login
-                                    </v-btn>
-                                    <v-btn class="btn primary" @click="check">
-                                        Check
-                                    </v-btn>
+                                <div class="form-group row">
+                                    <div class="col-md-8 offset-md-4">
+                                        <v-btn class="btn primary" @click="login">
+                                            Login
+                                        </v-btn>
+                                        <!-- <v-btn class="btn primary" @click="check">
+                                            Check
+                                        </v-btn> -->
+                                    </div>
                                 </div>
-                            </div>
+                            </v-form>
                             <div class="form-group row">
                                 <div class="col-md-8 offset-md-4">
                                     <hr class="col-md-8">

@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
 import Booking from './pages/Booking';
-import Practice from './pages/Practice';
+import Practice from './pages/Home';
 import Detail from './pages/Detail';
 import Login from './pages/Login';
 import ErrorComponent from './pages/Error';
@@ -18,7 +18,7 @@ const routes = [
             default: Practice,
             header: Header
         },
-        name: 'practice',
+        name: 'home',
         meta: { requiresAuth: true }
     },
     {
