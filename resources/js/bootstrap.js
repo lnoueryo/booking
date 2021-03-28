@@ -1,5 +1,5 @@
 window._ = require('lodash');
-
+window.Push = require('push.js');
 try {
     window.Popper = require('popper.js').default;
     window.$ = window.jQuery = require('jquery');
