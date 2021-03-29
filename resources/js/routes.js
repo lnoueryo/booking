@@ -1,5 +1,5 @@
 import VueRouter from 'vue-router';
-import Booking from './pages/Booking';
+import Plan from './pages/Plan';
 import Home from './pages/Home';
 import Detail from './pages/Detail';
 import Login from './pages/Login';
@@ -22,12 +22,12 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
-        path: '/booking/:sid/:id',
+        path: '/plan/:sid',
         components: {
-            default: Booking,
+            default: Plan,
             header: Header
         },
-        name: 'booking',
+        name: 'plan',
         meta: { requiresAuth: true }
     },
     {

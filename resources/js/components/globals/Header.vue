@@ -87,13 +87,13 @@ export default {
             items: [
                 {
                     icon: 'mdi-home',
-                    title: 'Home',
+                    title: 'HOME',
                     to: `/home/${this.$route.params.sid}`,
                 },
                 {
-                    icon: 'mdi-apps',
-                    title: 'booking',
-                    to: '/booking'
+                    icon: 'mdi-notebook-multiple',
+                    title: 'PLAN',
+                    to: `/plan/${this.$route.params.sid}`
                 },
             ],
             title: 'Reservierung',
