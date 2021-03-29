@@ -17,15 +17,16 @@ use Carbon\Carbon;
 Route::get('/time', function(){
     return Carbon::now();
 });
+Route::get('/booking/{sid}', 'BookingController@index');
+Route::get('/shop-plan/{sid}', 'ShopPlanController@index');
+Route::get('/booking/{sid}/{id}', 'BookingController@show');
+
 Route::resource('booking', 'BookingController', ['except' => ['index', 'create', 'edit', 'show']]);
 Route::resource('payment', 'PaymentController', ['except' => ['index', 'create', 'edit']]);
-// Route::get('user/{id}', function ($id) {
-//     //
-// })->where('id', '[0-9]+');
-Route::get('/booking/{sid}', 'BookingController@index');
+Route::resource('shop-plan', 'ShopPlanController', ['except' => ['index', 'create', 'edit']]);
+
 // Route::get('/booking/create', 'BookingController@create');
 // Route::post('/booking', 'BookingController@store');
-Route::get('/booking/{sid}/{id}', 'BookingController@show');
 // Route::post('/booking/{id}/edit', 'BookingController@edit');
 // Route::put('/booking/{id}', 'BookingController@update');
 // Route::delete('/booking/{id}', 'BookingController@destroy');
