@@ -125,6 +125,94 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+  <!-- <v-row>
+    <v-col
+      cols="11"
+      sm="5"
+    >
+      <v-menu
+        ref="menu"
+        v-model="menu2"
+        :close-on-content-click="false"
+        :nudge-right="40"
+        :return-value.sync="time"
+        transition="scale-transition"
+        offset-y
+        max-width="290px"
+        min-width="290px"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <v-text-field
+            v-model="time"
+            label="Picker in menu"
+            prepend-icon="mdi-clock-time-four-outline"
+            readonly
+            v-bind="attrs"
+            v-on="on"
+          ></v-text-field>
+        </template>
+        <v-time-picker
+          v-if="menu2"
+          v-model="start"
+          full-width
+          @click:minute="$refs.menu.save(start)"
+        　min="10:00"
+          max="19:00"
+          format="24hr"
+          scrollable
+        ></v-time-picker>
+      </v-menu>
+    </v-col>
+    <v-spacer></v-spacer>
+    <v-col
+      cols="11"
+      sm="5"
+    >
+      <v-dialog
+        ref="dialog"
+        v-model="modal2"
+        :return-value.sync="time"
+        persistent
+        width="290px"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <v-text-field
+            v-model="end"
+            label="Picker in dialog"
+            prepend-icon="mdi-clock-time-four-outline"
+            readonly
+            v-bind="attrs"
+            v-on="on"
+          ></v-text-field>
+        </template>
+        <v-time-picker
+          v-if="modal2"
+          v-model="end"
+          full-width
+        　min="10:00"
+          max="19:00"
+          format="24hr"
+          scrollable
+        >
+          <v-spacer></v-spacer>
+          <v-btn
+            text
+            color="primary"
+            @click="modal2 = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            text
+            color="primary"
+            @click="$refs.dialog.save(end)"
+          >
+            OK
+          </v-btn>
+        </v-time-picker>
+      </v-dialog>
+    </v-col>
+  </v-row> -->
     </div>
 </template>
 <script>
@@ -134,6 +222,10 @@ export default {
     props: ['duration', 'price', 'title'],
     data() {
         return {
+            start: null,
+            end: null,
+            menu2: false,
+            modal2: false,
             calendar: [],
             bookings: [],
             booking: '',
@@ -171,13 +263,15 @@ export default {
     },
     watch: {
         windowSizeX:{
-            handler(){
-                clearInterval(this.windowTime);
-                this.resetBooking(this.dateIndex);
-                let that = this;
-                this.windowTime = setTimeout(function(){that.makeCalendar(that.dateIndex);},300);
+            handler(v){
+                if(this.ready){
+                    clearInterval(this.windowTime);
+                    this.resetBooking(this.dateIndex);
+                    let that = this;
+                    that.windowTime = setTimeout(function(){that.makeCalendar(that.dateIndex);},300);
+                }
             },
-            immidiate: false
+            immediate: false
         }
     },
     async created(){
@@ -239,7 +333,7 @@ export default {
             for (let i = 10*index; i < 10+10*index; i++) {
                 for (let j = 0; j < 19; j++) {
                     const newCell = {isBooking: false}
-                    this.$set(this.calendar[i],j,newCell)
+                    this.$set(this.calendar[i],j,{isBooking: false})
                 }
             }
         },
@@ -422,10 +516,11 @@ export default {
         },
         touchEnd(root){
             if (this.isMouse) {
+                const width = this.$refs.frame[0].getBoundingClientRect().width
                 const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
                 const cells = this.$refs.cells;
                 let calendar = this.calendar[this.index2][this.index1]
-                const check = this.check(Math.round((calendar.x + this.distanceX)/63), Math.round((calendar.y + this.distanceY)/46));
+                const check = this.check(Math.round((calendar.x + this.distanceX)/width), Math.round((calendar.y + this.distanceY)/46));
                 this.disabled = false;
                 this.isMouse = false;
                 if (!check.isCheck&&!check.overBooking) {
@@ -458,9 +553,10 @@ export default {
             }
         },
         endMoveTag(){
+            const width = this.$refs.frame[0].getBoundingClientRect().width
             const booking = this.$refs.frame[this.index1+this.index2*19].children[0];
             let calendar = this.calendar[this.index2][this.index1]
-            const check = this.check(Math.round((calendar.x + this.distanceX)/63), Math.round((calendar.y + this.distanceY)/46));
+            const check = this.check(Math.round((calendar.x + this.distanceX)/width), Math.round((calendar.y + this.distanceY)/46));
             this.disabled = false;
             this.isMouse = false;
             if (!check.isCheck&&!check.overBooking) {
@@ -481,7 +577,8 @@ export default {
             this.distanceY = 0;
         },
         transform(booking, calendar, check){
-            calendar.x  = Math.round((calendar.x + this.distanceX)/63)*63;
+            const width = this.$refs.frame[0].getBoundingClientRect().width
+            calendar.x  = Math.round((calendar.x + this.distanceX)/width)*width;
             calendar.y  = Math.round((calendar.y + this.distanceY)/46)*46;
             booking.style.transform = `translate(${calendar.x}px,${calendar.y}px)`;
             this.dialog = true;

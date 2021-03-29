@@ -8,7 +8,7 @@ export default new Vuex.Store({
     state: {
         user: {},
         ready: false,
-        windowSize: {}
+        windowSize: {x: 0, y: 0}
     },
     mutations: {
         user(state, payload) {
@@ -45,7 +45,7 @@ export default new Vuex.Store({
                 Push.create(`ログイン`,{
                     body: fullName+'さんがログインしました',
                     icon: '/images/logo/logo01.png',
-                    timeout: 30000,
+                    timeout: 3000,
                     onClick: function () {
                         window.focus();
                         this.close();
