@@ -156,11 +156,11 @@ export default {
         },
     },
     async created(){
-        const {data, err} = (await axios.get(`/api/booking/${this.$route.params.sid}/${this.$route.params.id}`));
+        const {data, err} = (await axios.get(`/api/${this.$route.params.sid}/booking/${this.$route.params.id}`));
         if (data) {
             this.booking = data;
             if (!data.status) {
-                axios.put(`/api/booking/${this.$route.params.id}`,{status: true})
+                axios.put(`/api/${this.$route.params.sid}/booking/${this.$route.params.id}`,{status: true})
             }
             const paid = data.payment.paid;
             if(paid){
@@ -175,7 +175,7 @@ export default {
     },
     methods: {
         async hello(){
-            const {data, err} = await (axios.put(`/api/payment/${this.booking.id}`,{paid: this.select.isPaid}));
+            const {data, err} = await (axios.put(`/api/${this.$route.params.sid}/payment/${this.booking.id}`,{paid: this.select.isPaid}));
             if(data){
                 this.booking = Object.assign({}, this.booking, {payment: data});
             }
@@ -184,7 +184,7 @@ export default {
             return str?str:'なし'
         },
         cancelBooking(){
-            axios.put(`/api/booking/${this.$route.params.sid}/${this.$route.params.id}`)
+            axios.put(`/api/${this.$route.params.sid}/booking/${this.$route.params.id}`)
             .then(response=>{
                 this.booking = response.data;
                 // if (!response.data.isRead) {

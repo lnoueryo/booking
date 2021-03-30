@@ -275,7 +275,7 @@ export default {
         }
     },
     async created(){
-        const response = await (axios.get(`/api/booking/${this.$route.params.sid}`));
+        const response = await (axios.get(`/api/${this.$route.params.sid}/booking`));
         const bookings = response.data;
         for (let i = 0; i < bookings.length; i++) {
             await this.bookings.push(bookings[i]);
@@ -424,7 +424,7 @@ export default {
         },
         changeTime(){
             const params = {from: this.changedBooking.newFrom, to: this.changedBooking.newTo}
-            axios.put(`/api/booking/${this.booking.id}`,params)
+            axios.put(`/api/${this.$route.params.sid}/booking/${this.booking.id}`,params)
             .then((response)=>{
                 this.bookings = this.bookings.filter((booking)=>{
                     return booking.id !== this.booking.id;

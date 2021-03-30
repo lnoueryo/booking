@@ -68,9 +68,13 @@ class ShopPlanController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
-        //
+    public function update(Request $request, $sid, $id){
+        $request->types = json_encode($request->types);
+        // dd(json_decode($request->types));
+        // $request->types;
+        $shop_plan = ShopPlan::where('shop_id', $sid)->find($id);
+        $shop_plan->fill($request->all())->update();
+        return $shop_plan;
     }
 
     /**

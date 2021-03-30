@@ -17,13 +17,15 @@ use Carbon\Carbon;
 Route::get('/time', function(){
     return Carbon::now();
 });
-Route::get('/booking/{sid}', 'BookingController@index');
+Route::get('/{sid}/booking', 'BookingController@index');
+// Route::get('/booking/{sid}/{id}', 'BookingController@show');
 Route::get('/shop-plan/{sid}', 'ShopPlanController@index');
-Route::get('/booking/{sid}/{id}', 'BookingController@show');
+// Route::get('/shop-plan/{sid}/{id}', 'ShopPlanController@show');
 
-Route::resource('booking', 'BookingController', ['except' => ['index', 'create', 'edit', 'show']]);
-Route::resource('payment', 'PaymentController', ['except' => ['index', 'create', 'edit']]);
-Route::resource('shop-plan', 'ShopPlanController', ['except' => ['index', 'create', 'edit']]);
+Route::resource('/{sid}/booking', 'BookingController', ['only' => ['show', 'update', 'store']]);
+// Route::resource('booking', 'BookingController', ['except' => ['index', 'create', 'edit', 'show']]);
+Route::resource('/{sid}/payment', 'PaymentController', ['except' => ['index', 'create', 'edit']]);
+Route::resource('/{sid}/shop-plan', 'ShopPlanController', ['only' => ['show', 'update', 'store']]);
 
 // Route::get('/booking/create', 'BookingController@create');
 // Route::post('/booking', 'BookingController@store');

@@ -67,7 +67,7 @@ class PaymentController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id){
+    public function update(Request $request, $sid, $id){
         $payment = Payment::where('booking_id', $id)->first();
         $payment->fill($request->all())->update();
         // event(new ChangeBooking($booking));
