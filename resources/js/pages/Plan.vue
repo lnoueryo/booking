@@ -73,7 +73,7 @@
                         <v-file-input label="File input" filled prepend-icon="mdi-camera" @change="loadImage($event)" :value="[selectedPlan.image]"></v-file-input>
                         </v-col>
                         <v-col cols="12" md="6" sm="6">
-                        <v-img :src="'/storage/plan/' + selectedPlan.image" width="200" height="150" style="margin: auto;" v-if="!src"></v-img>
+                        <v-img :src="path + selectedPlan.image" width="200" height="150" style="margin: auto;" v-if="!src"></v-img>
                         <v-img :src="src" width="200" height="150" style="margin: auto;" v-if="src"></v-img>
                         </v-col>
                         <v-col cols="12" md="6" sm="6">
