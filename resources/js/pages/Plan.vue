@@ -69,6 +69,16 @@
                         <v-col cols="12">
                           <v-textarea counter rows="3" maxlength="120" label="説明" required v-model="selectedPlan.description"></v-textarea>
                         </v-col>
+                        <v-col cols="12">
+                        <v-file-input label="File input" filled prepend-icon="mdi-camera" @change="loadImage($event)" :value="[selectedPlan.image]"></v-file-input>
+                        </v-col>
+                        <v-col cols="12" md="6" sm="6">
+                        <v-img :src="'/storage/plan/' + selectedPlan.image" width="200" height="150" style="margin: auto;" v-if="!src"></v-img>
+                        <v-img :src="src" width="200" height="150" style="margin: auto;" v-if="src"></v-img>
+                        </v-col>
+                        <v-col cols="12" md="6" sm="6">
+                          <v-textarea counter rows="3" maxlength="120" label="説明" required v-model="selectedPlan.description"></v-textarea>
+                        </v-col>
                       </v-row>
                     </v-container>
                     <small>*indicates required field</small>
@@ -78,7 +88,7 @@
                     <v-btn color="blue darken-1" text @click="dialog = false">
                       Close
                     </v-btn>
-                    <v-btn color="blue darken-1" text @click="dialog = false">
+                    <v-btn color="blue darken-1" text @click="update">
                       Save
                     </v-btn>
                   </v-card-actions>
@@ -96,6 +106,7 @@ export default {
         return {
             plans: [],
             selectedPlan: '',
+            src: null,
             dialog: false,
             autoUpdate: true,
             isUpdating: false,
@@ -112,6 +123,26 @@ export default {
         });
     },
     methods: {
+      loadImage(e){
+        const reader = new FileReader();
+        let that = this;
+        reader.onload = () => {
+          that.src = reader.result;
+        }
+        reader.readAsDataURL(e)
+      },
+      async update(){
+        try {
+          // const types = JSON.stringify(this.selectedPlan.types);
+          const params = this.selectedPlan;
+          // const params = Object.assign(this.selectedPlan, {types: types});
+          const response = axios.put(`/api/${this.$route.params.sid}/shop-plan/${this.selectedPlan.id}`, params);
+          console.log(response.data)
+          this.dialog = false
+        } catch (error) {
+          console.log(error)
+        }
+      },
       remove (item) {
         const index = this.selectedPlan.types.indexOf(item.name)
         if (index >= 0) this.selectedPlan.types.splice(index, 1)
