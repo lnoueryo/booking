@@ -89,6 +89,82 @@
                 <v-card-text>
                     <v-container>
                         <v-row>
+                            <v-col cols="12" sm="6">
+                            <v-menu ref="menu" v-model="menu2" :close-on-content-click="false" :nudge-right="40" :return-value.sync="time" transition="scale-transition" offset-y
+                                max-width="290px"
+                                min-width="290px"
+                            >
+                                <template v-slot:activator="{ on, attrs }">
+                                <v-text-field
+                                    v-model="time"
+                                    label="Picker in menu"
+                                    prepend-icon="mdi-clock-time-four-outline"
+                                    readonly
+                                    v-bind="attrs"
+                                    v-on="on"
+                                ></v-text-field>
+                                </template>
+                                <v-time-picker
+                                v-if="menu2"
+                                v-model="start"
+                                full-width
+                                @click:minute="$refs.menu.save(start)"
+                                :allowed-minutes="allowedMinutes"
+                                　min="10:00"
+                                max="19:00"
+                                format="24hr"
+                                scrollable
+                                ></v-time-picker>
+                            </v-menu>
+                            </v-col>
+                            <v-col
+                            cols="12"
+                            sm="6"
+                            >
+                            <v-dialog
+                                ref="dialog"
+                                v-model="modal2"
+                                :return-value.sync="time"
+                                persistent
+                                width="290px"
+                            >
+                                <template v-slot:activator="{ on, attrs }">
+                                <v-text-field
+                                    v-model="time2"
+                                    label="Picker in dialog"
+                                    prepend-icon="mdi-clock-time-four-outline"
+                                    readonly
+                                    v-bind="attrs"
+                                    v-on="on"
+                                ></v-text-field>
+                                </template>
+                                <v-time-picker
+                                v-if="modal2"
+                                v-model="end"
+                                full-width
+                                　min="10:00"
+                                max="19:00"
+                                format="24hr"
+                                scrollable
+                                >
+                                <v-spacer></v-spacer>
+                                <v-btn
+                                    text
+                                    color="primary"
+                                    @click="modal2 = false"
+                                >
+                                    Cancel
+                                </v-btn>
+                                <v-btn
+                                    text
+                                    color="primary"
+                                    @click="$refs.dialog.save(end)"
+                                >
+                                    OK
+                                </v-btn>
+                                </v-time-picker>
+                            </v-dialog>
+                            </v-col>
                             <v-col ols="12" sm="4">
                                 <v-text-field label="開始時間" required :value="newBookingDate(newBookingTime())"></v-text-field>
                             </v-col>
@@ -125,8 +201,8 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-  <!-- <v-row>
-    <v-col
+  <v-row>
+    <!-- <v-col
       cols="11"
       sm="5"
     >
@@ -162,9 +238,9 @@
           scrollable
         ></v-time-picker>
       </v-menu>
-    </v-col>
+    </v-col> -->
     <v-spacer></v-spacer>
-    <v-col
+    <!-- <v-col
       cols="11"
       sm="5"
     >
@@ -211,8 +287,8 @@
           </v-btn>
         </v-time-picker>
       </v-dialog>
-    </v-col>
-  </v-row> -->
+    </v-col> -->
+  </v-row>
     </div>
 </template>
 <script>
@@ -226,6 +302,8 @@ export default {
             end: null,
             menu2: false,
             modal2: false,
+            time: '',
+            time2: '',
             calendar: [],
             bookings: [],
             booking: '',
@@ -329,6 +407,7 @@ export default {
         clearTimeout(this.touchJudge);
     },
     methods: {
+        allowedMinutes: v => v == 0 || v == 30,
         resetBooking(index){
             for (let i = 10*index; i < 10+10*index; i++) {
                 for (let j = 0; j < 19; j++) {
@@ -418,9 +497,36 @@ export default {
             }
         },
         endMoveBooking(){
+            // let birthday = new Date(1995, 11, 17, 3, 24, 0)
+            this.newBookingFormat();
             this.bookingDialog = true;
             this.isMakeMouse = false;
             this.disabled = false;
+        },
+        newBookingFormat(){
+            let changeFromFormat;
+            let changeToFormat;
+            if (this.num==0) {
+                const from = new Date(this.booking.from);
+                const fromHours = from.getHours();
+                const fromMinutes = from.getMinutes()==0?from.getMinutes()+'0':from.getMinutes();
+                changeFromFormat = fromHours + ':' + fromMinutes;
+                const to = new Date(this.booking.from+this.booking.duration*60*1000);
+                const toHours = to.getHours();
+                const toMinutes = to.getMinutes()==0?to.getMinutes()+'0':to.getMinutes();
+                changeToFormat = toHours + ':' + toMinutes;
+            } else {
+                const from = new Date(this.booking.from-(this.booking.duration-30)*60*1000);
+                const fromHours = from.getHours();
+                const fromMinutes = from.getMinutes()==0?from.getMinutes()+'0':from.getMinutes();
+                changeFromFormat = fromHours + ':' + fromMinutes;
+                const to = new Date(this.booking.from);
+                const toHours = to.getHours();
+                const toMinutes = to.getMinutes()==0?to.getMinutes()+'0':to.getMinutes();
+                changeToFormat = toHours + ':' + toMinutes;
+            }
+            this.time = changeFromFormat;
+            this.time2 = changeToFormat;
         },
         changeTime(){
             const params = {from: this.changedBooking.newFrom, to: this.changedBooking.newTo}
