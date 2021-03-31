@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\ShopPlan;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use App\Rules\Duration;
+use Illuminate\Support\Facades\Validator;
 
 class ShopPlanController extends Controller
 {
@@ -34,9 +39,40 @@ class ShopPlanController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, $sid)
     {
-        //
+        $data = $request->validate([
+            'title' => 'required|string|max:25',
+            'types' => 'required|array',
+            'price' => 'required|integer',
+            'duration' => new Duration($request),
+            'description' => 'required|string|max:120',
+            'new_image' => 'required',
+            ]);
+
+        // $shop_plan = ShopPlan::where('shop_id', $sid);
+        $image = $request->new_image;
+        if(strpos($image,'data:image/png;') !== false){
+            $image = str_replace('data:image/png;base64,', '', $image);
+            $image = str_replace(' ', '+', $image);
+            $imageName = Str::random(20).'.'.'png';
+        } else {
+            $image = str_replace('data:image/jpeg;base64,', '', $image);
+            $image = str_replace(' ', '+', $image);
+            $imageName = Str::random(20).'.'.'jpg';
+        }
+        Storage::disk('plan')->put($imageName, base64_decode($image));
+        // $request->types = json_encode($request->types);
+        // dd($sid);
+        return ShopPlan::create([
+            'shop_id' => $sid,
+            'title' => $data['title'],
+            'types' => json_encode($data['types']),
+            'price' => $data['price'],
+            'duration' => $data['duration'],
+            'description' => $data['description'],
+            'image' => $imageName,
+        ]);
     }
 
     /**
@@ -69,11 +105,32 @@ class ShopPlanController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $sid, $id){
-        $request->types = json_encode($request->types);
-        // dd(json_decode($request->types));
-        // $request->types;
         $shop_plan = ShopPlan::where('shop_id', $sid)->find($id);
-        $shop_plan->fill($request->all())->update();
+        
+        DB::transaction(function () use ($request, $shop_plan) {
+            if (!$request->new_image) {
+                $request->types = json_encode($request->types);
+                $shop_plan->fill($request->all())->update();
+            } else {
+                $image = $request->new_image;
+                if(strpos($image,'data:image/png;') !== false){
+                    $image = str_replace('data:image/png;base64,', '', $image);
+                    $image = str_replace(' ', '+', $image);
+                    $imageName = Str::random(20).'.'.'png';
+                } else {
+                    $image = str_replace('data:image/jpeg;base64,', '', $image);
+                    $image = str_replace(' ', '+', $image);
+                    $imageName = Str::random(20).'.'.'jpg';
+                }
+                Storage::disk('plan')->put($imageName, base64_decode($image));
+                Storage::disk('plan')->delete($request->image);
+                $request->types = json_encode($request->types);
+                $shop_plan->fill($request->all())->update();
+                $shop_plan->image = $imageName;
+                $shop_plan->save();
+            }
+        });
+        
         return $shop_plan;
     }
 

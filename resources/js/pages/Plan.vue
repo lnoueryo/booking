@@ -1,8 +1,13 @@
 <template>
     <div>
+      <v-row>
+          <v-col cols="12">
+            <v-btn color="indigo" text outlined right absolute @click="openPlanDialog('')" style="z-index:1">create</v-btn>
+          </v-col>
+      </v-row>
         <v-row>
             <v-col v-for="(plan, i) in plans" :key="i" cols="12" md="4">
-                <v-card class="mx-auto my-12" max-width="320" link @click="dialog=true;selectedPlan=plan">
+                <v-card class="mx-auto my-12" max-width="320" link @click="openPlanDialog(plan)">
                     <template slot="progress">
                         <v-progress-linear color="deep-purple" height="10" indeterminate></v-progress-linear>
                     </template>
@@ -32,7 +37,8 @@
             </v-col>
         </v-row>
         <v-row justify="center">
-            <v-dialog v-model="dialog" persistent max-width="600px">
+              <plan-dialog ref="planDialog" v-bind="selectedPlan" @reloadPlan="getPlan"></plan-dialog>
+            <!-- <v-dialog v-model="dialog" persistent max-width="600px">
                 <v-card>
                   <v-card-title>
                     <span class="headline">User Profile</span>
@@ -93,15 +99,19 @@
                     </v-btn>
                   </v-card-actions>
                 </v-card>
-            </v-dialog>
+            </v-dialog> -->
         </v-row>
     </div>
 </template>
 
 <script>
-import indication from "../components/mixins/indication"
+import indication from "../components/mixins/indication.js";
+import PlanDialog from '../components/plan/PlanDialog'
 export default {
     mixins: [indication],
+    components: {
+      PlanDialog
+    },
     data() {
         return {
             plans: [],
@@ -113,23 +123,26 @@ export default {
             name: 'Midnight Crew',
             types: [{name: 'カット'}, {name: 'パーマ'}, {name: 'カラー'}, {name: 'トリートメント'}, {name: 'スパ'}],
             title: 'The summer breeze',
+            newPlan: {shop_id: this.$route.params.sid, title: null, types: [], price: null, duration: null, description: null, image: null}
         }
     },
-    async created(){
-        const {data, err} = await axios.get(`/api/shop-plan/${this.$route.params.sid}`)
+    created(){
+      this.getPlan();
+    },
+    methods: {
+      async getPlan(){
+        this.plans.splice(0, this.plans.length)
+        const {data, err} = (await axios.get(`/api/shop-plan/${this.$route.params.sid}`))
         data.forEach(plan => {
           plan.types = JSON.parse(plan.types)
             this.plans.push(plan)
         });
-    },
-    methods: {
-      loadImage(e){
-        const reader = new FileReader();
-        let that = this;
-        reader.onload = () => {
-          that.src = reader.result;
-        }
-        reader.readAsDataURL(e)
+        this.$refs.planDialog.dialog = false;
+      },
+      openPlanDialog(plan){
+        this.selectedPlan = {};
+        this.selectedPlan = plan;
+        this.$refs.planDialog.dialog = true;
       },
       async update(){
         try {
@@ -142,10 +155,6 @@ export default {
         } catch (error) {
           console.log(error)
         }
-      },
-      remove (item) {
-        const index = this.selectedPlan.types.indexOf(item.name)
-        if (index >= 0) this.selectedPlan.types.splice(index, 1)
       },
     }
 }

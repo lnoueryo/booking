@@ -59,7 +59,7 @@ class BookingController extends Controller
     }
     
     public function update(Request $request, $sid, $id){
-        $booking = Booking::with(['user', 'plans', 'payment'])->where('shop_id', $sid)->find($id);
+        $booking = Booking::with(['user', 'plans', 'payment'])->where('shop_id', $sid)->first($id);
         $booking->fill($request->all())->update();
         event(new ChangeBooking($booking));
         return $booking;

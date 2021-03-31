@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="d-flex text-center">
-            <div style="width: 100%;">
+            <div class="whole-calendar" style="width: 100%;">
                 <transition name="calendar" mode="out-in">
                     <div ref="calendar" class="text-center d-flex" v-show="ready" style="height: 520px;width:100%;">
                         <div>
@@ -12,7 +12,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div style="width:100%;">
+                        <div style="width:100%;min-width: 700px;">
                             <div class="d-flex text-center">
                                 <div class="period" v-for="(period , i) in periods" :key="i"><span>{{ period }}</span></div>
                             </div>
@@ -805,5 +805,13 @@ export default {
         position: relative;
         width:100%;
         height: 46px;
+    }
+    .whole-calendar{
+        overflow-x: scroll;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .whole-calendar::-webkit-scrollbar { 
+        display:none;
     }
 </style>

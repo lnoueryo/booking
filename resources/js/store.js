@@ -53,7 +53,7 @@ export default new Vuex.Store({
                 })
                 window.location.href = `/home/${response.data.shop_id}`;
             })
-            // .error((err)=>{console.log(err)})
+            .catch((err)=>{console.log(err.response)})
         },
         async logout(context) {
             // try{
