@@ -81,114 +81,105 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-model="bookingDialog" persistent max-width="600px">
+        <v-dialog v-model="bookingDialog" persistent max-width="700px">
             <v-card>
-                <v-card-title>
+                <!-- <v-card-title>
                     <span class="headline">User Profile</span>
-                </v-card-title>
+                </v-card-title> -->
                 <v-card-text>
                     <v-container>
                         <v-row>
-                            <v-col cols="12" sm="6">
-                            <v-menu ref="menu" v-model="menu2" :close-on-content-click="false" :nudge-right="40" :return-value.sync="time" transition="scale-transition" offset-y
-                                max-width="290px"
-                                min-width="290px"
-                            >
-                                <template v-slot:activator="{ on, attrs }">
-                                <v-text-field
-                                    v-model="time"
-                                    label="Picker in menu"
-                                    prepend-icon="mdi-clock-time-four-outline"
-                                    readonly
-                                    v-bind="attrs"
-                                    v-on="on"
-                                ></v-text-field>
-                                </template>
-                                <v-time-picker
-                                v-if="menu2"
-                                v-model="start"
-                                full-width
-                                @click:minute="$refs.menu.save(start)"
-                                :allowed-minutes="allowedMinutes"
-                                　min="10:00"
-                                max="19:00"
-                                format="24hr"
-                                scrollable
-                                ></v-time-picker>
-                            </v-menu>
+                            <v-col cols="12" sm="6" md="6">
+                                <v-menu v-model="menu3" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="auto">
+                                    <template v-slot:activator="{ on, attrs }">
+                                    <v-text-field v-model="bookingDate" label="Picker without buttons" prepend-icon="mdi-calendar" readonly v-bind="attrs" v-on="on"></v-text-field>
+                                    </template>
+                                    <v-date-picker :max="maxDate" v-model="bookingDate" @input="menu3 = false"></v-date-picker>
+                                </v-menu>
                             </v-col>
-                            <v-col
-                            cols="12"
-                            sm="6"
-                            >
-                            <v-dialog
-                                ref="dialog"
-                                v-model="modal2"
-                                :return-value.sync="time"
-                                persistent
-                                width="290px"
-                            >
+                            <v-col cols="12" sm="6">
+                            <v-menu ref="menu" v-model="menu2" :close-on-content-click="false" :nudge-right="40" :return-value.sync="time" transition="scale-transition" offset-y max-width="290px" min-width="290px">
                                 <template v-slot:activator="{ on, attrs }">
-                                <v-text-field
-                                    v-model="time2"
-                                    label="Picker in dialog"
-                                    prepend-icon="mdi-clock-time-four-outline"
-                                    readonly
-                                    v-bind="attrs"
-                                    v-on="on"
-                                ></v-text-field>
+                                <v-text-field v-model="time" label="Picker in menu" prepend-icon="mdi-clock-time-four-outline" readonly v-bind="attrs" v-on="on"></v-text-field>
                                 </template>
-                                <v-time-picker
-                                v-if="modal2"
-                                v-model="end"
-                                full-width
-                                　min="10:00"
-                                max="19:00"
-                                format="24hr"
-                                scrollable
-                                >
-                                <v-spacer></v-spacer>
-                                <v-btn
-                                    text
-                                    color="primary"
-                                    @click="modal2 = false"
-                                >
+                                <v-time-picker v-if="menu2" v-model="time" full-width @click:minute="$refs.menu.save(time)" :allowed-minutes="allowedMinutes" min="10:00" :max="max" format="24hr" scrollable>
+                                <!-- <v-spacer></v-spacer>
+                                <v-btn text color="primary" @click="menu2 = false">
                                     Cancel
                                 </v-btn>
-                                <v-btn
-                                    text
-                                    color="primary"
-                                    @click="$refs.dialog.save(end)"
-                                >
+                                <v-btn text color="primary" @click="$refs.dialog.save(time)">
                                     OK
-                                </v-btn>
+                                </v-btn> -->
+                                </v-time-picker>
+                            </v-menu>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="6">
+                                <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="auto">
+                                    <template v-slot:activator="{ on, attrs }">
+                                    <v-text-field v-model="bookingDate" label="Picker without buttons" prepend-icon="mdi-calendar" readonly v-bind="attrs" v-on="on"></v-text-field>
+                                    </template>
+                                    <v-date-picker v-model="bookingDate" @input="menu = false"></v-date-picker>
+                                </v-menu>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                            <v-dialog ref="dialog" v-model="modal2" :return-value.sync="time2" persistent width="290px">
+                                <template v-slot:activator="{ on, attrs }">
+                                <v-text-field v-model="time2" label="Picker in dialog" prepend-icon="mdi-clock-time-four-outline" readonly v-bind="attrs" v-on="on"></v-text-field>
+                                </template>
+                                <v-time-picker v-if="modal2" v-model="time2"  @click:minute="$refs.dialog.save(time2)" :allowed-minutes="allowedMinutes" full-width :min="min" max="19:30" format="24hr" scrollable>
                                 </v-time-picker>
                             </v-dialog>
                             </v-col>
-                            <v-col ols="12" sm="4">
-                                <v-text-field label="開始時間" required :value="newBookingDate(newBookingTime())"></v-text-field>
+                            <v-col cols="12" sm="3">
+                                <v-text-field single-line style="background-color: white" prepend-icon="mdi-bitcoin" label="料金" required v-model="booking.price" autocomplete="new-password"></v-text-field>
                             </v-col>
-                            <v-col cols="12" sm="4">
-                                <v-text-field label="終了時間" required :value="newBookingDate(newBookingTime()+booking.duration*60*1000-1)"></v-text-field>
+                            <v-col cols="12" sm="3">
+                                <v-text-field prepend-icon="mdi-timer-sand" label="合計時間" required v-model="booking.duration" disabled></v-text-field>
                             </v-col>
-                            <v-col cols="12" sm="4">
-                                <v-text-field label="合計時間" required :value="booking.duration"></v-text-field>
+                            <v-col cols="12" sm="6">
+                                <v-autocomplete prepend-icon="mdi-content-cut" v-model="booking.plan" :items="shopPlans" label="プラン"></v-autocomplete>
                             </v-col>
-                            <v-col cols="12" sm="6" md="6">
-                                <v-text-field label="first name*" required></v-text-field>
-                            </v-col>
-                            <v-col cols="12" sm="6" md="6">
-                                <v-text-field label="last name*" hint="example of persistent helper text" persistent-hint required></v-text-field>
-                            </v-col>
-                            <v-col cols="12">
-                                <v-text-field label="Email*" required></v-text-field>
-                            </v-col>
-                            <v-col cols="12">
-                                <v-text-field label="Password*" type="password" required></v-text-field>
+                            <v-row class="px-3" v-if="booking.user">
+                                <v-col cols="12" sm="10">
+                                    <v-menu offset-y max-width="230">
+                                        <template v-slot:activator="{ on }">
+                                            <v-text-field prepend-icon="mdi-magnify" v-model="search" hint="名前、電話番号、Emailで検索可能です" label="Search" single-line v-on="on" autocomplete="new-password" @keyup="searchTimeOut"></v-text-field>
+                                        </template>
+                                        <v-list three-line v-if="userInfo.length > 0">
+                                            <template v-for="(user, index) in userInfo">
+                                                <v-list-item :key="index" @click="hello(user)">
+                                                    <v-list-item-content style="align-items: start;">
+                                                        <v-list-item-title style="-webkit-line-clamp: initial;" >{{ user.last_name }}{{ user.first_name}}<span v-if="user.guest">　(guest)</span></v-list-item-title>
+                                                        <v-list-item-subtitle style="-webkit-line-clamp: initial;">{{ user.phone }}<br>{{ user.email }}</v-list-item-subtitle>
+                                                    </v-list-item-content>
+                                                </v-list-item>
+                                            </template>
+                                        </v-list>
+                                    </v-menu>
+                                    <!-- <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line autocomplete="off" @keyup="searchTimeOut"></v-text-field> -->
+
+                                </v-col>
+                                <v-col cols="12" sm="2" class="d-flex align-items-center"><v-btn color="indigo" block class="white--text" @click="makeNewUser">新規作成</v-btn></v-col>
+                                <v-col cols="12" v-if="booking.user.id==null"><h2>新規作成</h2></v-col>
+                                <v-col cols="12" sm="3" md="3" class="d-flex">
+                                    <v-icon left>mdi-checkbox-blank-circle</v-icon><v-text-field label="last name*" persistent-hint required v-model="booking.user.last_name" autocomplete="new-password" :disabled="booking.user.id!==null"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="3" md="3" class="d-flex">
+                                    <v-icon left>mdi-checkbox-blank-circle-outline</v-icon><v-text-field label="first name*" required v-model="booking.user.first_name" autocomplete="new-password" :disabled="booking.user.id!==null"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="6" md="6" class="d-flex">
+                                    <v-icon left>mdi-phone</v-icon><v-text-field label="Phone" persistent-hint required v-model="booking.user.phone" autocomplete="new-password" :disabled="booking.user.id!==null"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" sm="6" md="6" class="d-flex">
+                                    <v-icon left>mdi-email</v-icon><v-text-field label="Email*" required v-model="booking.user.email" autocomplete="new-password" :disabled="booking.user.id!==null"></v-text-field>
+                                </v-col>
+                            </v-row>
+                            <v-col cols="12" sm="12" class="d-flex">
+                                <v-icon left>mdi-message</v-icon><v-text-field label="memo" required v-model="booking.message" autocomplete="new-password"></v-text-field>
                             </v-col>
                         </v-row>
                     </v-container>
-                    <small>*indicates required field</small>
+                    <!-- <small>*indicates required field</small> -->
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
@@ -294,22 +285,27 @@
 <script>
 // import EventTag from '../components/EventTag'
 // import router from '../routes';
+import calendar from '../components/mixins/calendar'
 export default {
+    mixins: [calendar],
     props: ['duration', 'price', 'title'],
     data() {
         return {
-            start: null,
-            end: null,
+            search: '',
+            users: '',
+            bookingDate: null,
+            menu: false,
             menu2: false,
+            menu3: false,
+            modal: false,
             modal2: false,
-            time: '',
-            time2: '',
+            time: null,
+            time2: null,
             calendar: [],
             bookings: [],
             booking: '',
             changedBooking: '',
             newBooking: {},
-            periods: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30','19:00'],
             days: this.makeTwoWeeks(0),
             dateIndex: 0,
             ready: false,
@@ -331,17 +327,40 @@ export default {
             dialogMessage: '',
             bookingDialog: false,
             num: 0,
-            windowTime: ''
+            windowTime: '',
+            shopPlans: [],
+            timeOut: '',
         }
     },
     computed:{
         windowSizeX(){
             return this.$store.state.windowSize.x;
         },
+        max(){
+            const bookingDate = new Date(`${this.bookingDate} ${this.time2}`);
+            bookingDate.getTime()
+            const minusOneMinute = bookingDate-60*1000;
+            const newTime = new Date(minusOneMinute)
+            const hour = newTime.getHours();
+            const minute = newTime.getMinutes();
+            return `${hour}:${minute}`
+        },
+        min(){
+            const bookingDate = (new Date(`${this.bookingDate} ${this.time}`)).getTime();
+            console.log(bookingDate)
+            const plusOneMinute = bookingDate+30*60*1000;
+            const newTime = new Date(plusOneMinute)
+            const hour = newTime.getHours();
+            const minute = newTime.getMinutes();
+            return `${hour}:${minute}`
+        },
+        userInfo(){
+            return this.users;
+        }
     },
     watch: {
         windowSizeX:{
-            handler(v){
+            handler(){
                 if(this.ready){
                     clearInterval(this.windowTime);
                     this.resetBooking(this.dateIndex);
@@ -350,7 +369,32 @@ export default {
                 }
             },
             immediate: false
-        }
+        },
+        time: {
+            handler(){
+                const bookingDate = new Date(`${this.bookingDate} ${this.time}`);
+                this.booking.from = bookingDate.getTime();
+                if(this.booking.to){this.booking.duration = (this.booking.to-this.booking.from)/60/1000}
+            },
+            immediate: false
+        },
+        time2: {
+            handler(){
+                const bookingDate = new Date(`${this.bookingDate} ${this.time2}`);
+                this.booking.to = bookingDate.getTime();
+                this.booking.duration = (this.booking.to-this.booking.from)/60/1000;
+            },
+            immediate: false
+        },
+        bookingDate: {
+            handler(){
+                const bookingFromDate = new Date(`${this.bookingDate} ${this.time}`);
+                const bookingToDate = new Date(`${this.bookingDate} ${this.time2}`);
+                this.booking.from = bookingFromDate.getTime();
+                this.booking.to = bookingToDate.getTime();
+            },
+            immediate: false
+        },
     },
     async created(){
         const response = await (axios.get(`/api/${this.$route.params.sid}/booking`));
@@ -402,11 +446,43 @@ export default {
                 }
             }
         });
+        const {data, err} = await axios.get(`/api/${this.$route.params.sid}/shop-plan`)
+        data.forEach((v)=>{
+            this.shopPlans.push(v.title);
+        })
     },
     beforeDestroy(){
         clearTimeout(this.touchJudge);
     },
     methods: {
+        makeNewUser(){
+            this.booking = Object.assign({}, this.booking, {user: {id: null,last_name: null, first_name: null,email: null,phone:null,method: false,message:null,memo:null}})
+        },
+        hello(user){
+            this.booking = Object.assign({}, this.booking, {user: user})
+            console.log(user)
+        },
+        searchTimeOut() {
+            clearTimeout(this.timeOut);
+            let that = this;
+            this.timeOut = setTimeout(() => {
+                that.searchUser();
+            }, 400);
+        },
+        searchUser(){
+            axios.get(`/api/${this.$route.params.sid}/user`, {
+                params: {'cond_user': this.search},
+            })
+            .then(
+                response =>{
+                    console.log(response.data)
+                    this.users = response.data
+                },
+            )
+            .catch(function (error) {
+                console.log(error);
+            });
+        },
         allowedMinutes: v => v == 0 || v == 30,
         resetBooking(index){
             for (let i = 10*index; i < 10+10*index; i++) {
@@ -416,33 +492,21 @@ export default {
                 }
             }
         },
-        newBookingDate(time){
-            let changedFormat = new Date(time*1);
-            const day = ['日', '月', '火', '水', '木', '金', '土']
-            changedFormat.setMonth(changedFormat.getMonth()+1)
-            const month = changedFormat.getMonth()===0 ? 12 : changedFormat.getMonth();
-            const date = changedFormat.getDate();
-            const dayNum = changedFormat.getDay();
-            const hours = changedFormat.getHours();
-            let minutes;
-            if (changedFormat.getMinutes()>=10) {
-                minutes = changedFormat.getMinutes();
-            } else {
-                minutes = '0' + changedFormat.getMinutes()
-            }
-            let seconds;
-            if (changedFormat.getSeconds()>=10) {
-                seconds = changedFormat.getSeconds();
-            } else {
-                seconds = '0' + changedFormat.getSeconds()
-            }
-            const newFormat = `${month}月${date}日(${day[dayNum]}) ${hours}:${minutes}:${seconds}`
-            return newFormat;
-        },
         newBookingTime(){
             return this.booking.from-(this.num*(this.booking.duration-30)*60*1000)
         },
-        saveBookingDialog(){
+        async saveBookingDialog(){
+            const params = this.booking;
+            const response = await (axios.post(`/api/${this.$route.params.sid}/booking/create`, params));
+            this.booking = this.bookings.find((booking)=>{
+                return booking.id === response.data.id;
+            })
+            this.bookings = this.bookings.filter((booking)=>{
+                return booking.id !== response.data.id;
+            })
+            this.checkBooking();
+            this.bookings.push(response.data);
+            this.isBooking();
             this.bookingDialog = false;
         },
         closeBookingDialog(){
@@ -452,14 +516,14 @@ export default {
             this.isBooking(this.dateIndex);
         },
         touchMake(booking){
-            this.booking = Object.assign(booking,{user: {last_name: 'new', first_name: ''},isBooking: true,duration: 30,from:booking.date});
+            this.booking = Object.assign(booking,{user: {id: null, last_name: null, first_name: null,email: null,phone:null,method: false,message:null,memo:null},isBooking: true,duration: 30,from:booking.date,to: null,shop_id: null,cancelled: false,message: null,plan: ''},{payment: {paid: false}});
             this.bookings.push(this.booking);
             this.isBooking();
             this.bookingDialog = true;
         },
         make(e,booking){
             this.num=0;
-            this.booking = Object.assign(booking,{user: {last_name: 'new', first_name: ''},isBooking: true,duration: 30,from:booking.date},{payment: {paid: false}});
+            this.booking = Object.assign(booking,{user: {id: null, last_name: null, first_name: null,email: null,phone:null,method: false,message:null,memo:null},isBooking: true,duration: 30,from:booking.date,to: null,shop_id: null,cancelled: false,message: null},{payment: {paid: false}});
             this.bookings.push(this.booking);
             this.isBooking();
             this.isMakeMouse = true;
@@ -497,13 +561,13 @@ export default {
             }
         },
         endMoveBooking(){
-            // let birthday = new Date(1995, 11, 17, 3, 24, 0)
-            this.newBookingFormat();
+            this.newBookingTimeFormat();
+            this.newBookingDateFormat();
             this.bookingDialog = true;
             this.isMakeMouse = false;
             this.disabled = false;
         },
-        newBookingFormat(){
+        newBookingTimeFormat(){
             let changeFromFormat;
             let changeToFormat;
             if (this.num==0) {
@@ -527,6 +591,27 @@ export default {
             }
             this.time = changeFromFormat;
             this.time2 = changeToFormat;
+        },
+        newBookingDateFormat(){
+            let from;
+            if (this.num==0) {
+                from = new Date(this.booking.from);
+            } else {
+                from = new Date(this.booking.from-(this.booking.duration-30)*60*1000);
+            }
+            const year = from.getFullYear();
+            let month = from.getMonth()+1;
+            if(month==13){
+                month=1
+            }
+            if(month<10){
+                month = '0'+ month
+            }
+            let date = from.getDate();
+            if(date<10){
+                date = '0' + date
+            }
+            this.bookingDate = `${year}-${month}-${date}`;
         },
         changeTime(){
             const params = {from: this.changedBooking.newFrom, to: this.changedBooking.newTo}
@@ -850,33 +935,6 @@ export default {
             this.dateIndex-=1;
             this.days = this.makeTwoWeeks(this.dateIndex);
             this.makeCalendar(this.dateIndex)
-        },
-        dayOfWeek(num){
-            const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-            return dayOfWeek[num]
-        },
-        date(time){
-            let changedFormat = new Date(time);
-            const day = ['日', '月', '火', '水', '木', '金', '土']
-            changedFormat.setMonth(changedFormat.getMonth()+1)
-            const month = changedFormat.getMonth(); 
-            const date = changedFormat.getDate();
-            const dayNum = changedFormat.getDay();
-            const hours = changedFormat.getHours();
-            let minutes;
-            if (changedFormat.getMinutes()>=10) {
-                minutes = changedFormat.getMinutes();
-            } else {
-                minutes = '0' + changedFormat.getMinutes()
-            }
-            let seconds;
-            if (changedFormat.getSeconds()>=10) {
-                seconds = changedFormat.getSeconds();
-            } else {
-                seconds = '0' + changedFormat.getSeconds()
-            }
-            const newFormat = `${month}月${date}日(${day[dayNum]}) ${hours}:${minutes}:${seconds}`
-            return newFormat;
         },
     }
 }
