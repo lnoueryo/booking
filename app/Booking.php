@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class Booking extends Model
 {
-    protected $fillable = ['from', 'to', 'price', 'duration', 'user_id', 'status', 'cancelled'];
+    protected $fillable = ['from', 'to', 'duration', 'plan', 'message', 'user_id', 'status', 'cancelled'];
 
     protected $table = 'bookings';
     protected $primaryKey = 'id';
@@ -31,10 +31,10 @@ class Booking extends Model
     {
         return $this->hasOne('App\User', 'id', 'user_id');
     }
-    public function plans()
-    {
-        return $this->hasMany('App\Plan', 'booking_id', 'id');
-    }
+    // public function plans()
+    // {
+    //     return $this->hasMany('App\Plan', 'booking_id', 'id');
+    // }
     public function payment()
     {
         return $this->hasOne('App\Payment', 'booking_id', 'id');
