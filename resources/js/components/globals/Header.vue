@@ -1,6 +1,6 @@
 <template>
     <div>
-        <v-navigation-drawer v-model="drawer" absolute bottom temporary src="https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg" dark>
+        <v-navigation-drawer v-model="drawer" fixed bottom temporary src="https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg" dark>
             <v-list>
                 <!-- <v-list-item>
                 <v-list-item-avatar>

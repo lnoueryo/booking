@@ -18,10 +18,13 @@ Route::get('/time', function(){
     return Carbon::now();
 });
 Route::get('/{sid}/booking', 'BookingController@index');
+Route::post('/{sid}/booking/create', 'BookingController@create');
 // Route::get('/booking/{sid}/{id}', 'BookingController@show');
-Route::get('/shop-plan/{sid}', 'ShopPlanController@index');
+Route::get('/{sid}/shop-plan', 'ShopPlanController@index');
 // Route::get('/shop-plan/{sid}/{id}', 'ShopPlanController@show');
+Route::get('/{sid}/user', 'UserController@index');
 
+Route::resource('/{sid}/user', 'UserController', ['only' => ['show', 'update', 'store']]);
 Route::resource('/{sid}/booking', 'BookingController', ['only' => ['show', 'update', 'store']]);
 // Route::resource('booking', 'BookingController', ['except' => ['index', 'create', 'edit', 'show']]);
 Route::resource('/{sid}/payment', 'PaymentController', ['except' => ['index', 'create', 'edit']]);

@@ -132,7 +132,7 @@ export default {
     methods: {
       async getPlan(){
         this.plans.splice(0, this.plans.length)
-        const {data, err} = (await axios.get(`/api/shop-plan/${this.$route.params.sid}`))
+        const {data, err} = (await axios.get(`/api/${this.$route.params.sid}/shop-plan`))
         data.forEach(plan => {
           plan.types = JSON.parse(plan.types)
             this.plans.push(plan)

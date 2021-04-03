@@ -25,9 +25,10 @@
                 </div>
                 <div class="d-flex" style="align-items:center;padding:1% 0;">
                     <h4 style="margin: 0 1%">タイトル:　</h4>
-                    <div class="d-flex" v-for="(plan, i) in booking.plans" :key="i">
+                    <h4 style="margin:0 1%">{{booking.plan}}　</h4>
+                    <!-- <div class="d-flex" v-for="(plan, i) in booking.plans" :key="i">
                         <h4 style="margin:0 1%">{{plan.title}}　</h4>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="d-flex" style="margin: 0 1%;padding:1% 0;">
                     <h4>開始時間:　</h4>
