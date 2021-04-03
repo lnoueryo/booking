@@ -24,6 +24,7 @@ class BookingController extends Controller
                     'email' => $request->user['email'],
                     'phone' => $request->user['phone'],
                     'memo' => $request->user['memo'],
+                    'guest' => true,
                 ]);
             } else {
                 $this->user = $request->user;
