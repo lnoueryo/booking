@@ -5,6 +5,7 @@ import Detail from './pages/Detail';
 import Login from './pages/Login';
 import ErrorComponent from './pages/Error';
 import Register from './pages/Register';
+import BookingPage from './pages/BookingPage';
 import Header from './components/globals/Header';
 import axios from 'axios';
 import Store from './store'
@@ -57,6 +58,14 @@ const routes = [
         path: '/sign-up',
         component: Register,
         name: 'register',
+    },
+    {
+        path: '/booking/:sid',
+        components: {
+            default: BookingPage,
+            header: Header
+        },
+        name: 'booking',
     },
     {
         name: '404',

@@ -61,8 +61,8 @@
                         </div>
                     </div>
                 </transition>
-                <v-btn @click="previousWeek" :disabled="!ready">back</v-btn>
-                <v-btn @click="nextWeek" :disabled="!ready">next</v-btn>
+                <v-btn class="mx-4 my-2" @click="previousWeek" :disabled="!ready">back</v-btn>
+                <v-btn class="mx-4 my-2" @click="nextWeek" :disabled="!ready">next</v-btn>
             </div>
         </div>
         <v-dialog v-model="dialog" max-width="400">
@@ -496,6 +496,7 @@ export default {
             return this.booking.from-(this.num*(this.booking.duration-30)*60*1000)
         },
         async saveBookingDialog(){
+            this.booking.to = this.booking.to-60*1000;
             const params = this.booking;
             const response = await (axios.post(`/api/${this.$route.params.sid}/booking/create`, params));
             this.booking = this.bookings.find((booking)=>{

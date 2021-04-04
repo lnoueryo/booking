@@ -95,6 +95,11 @@ export default {
                     title: 'PLAN',
                     to: `/plan/${this.$route.params.sid}`
                 },
+                {
+                    icon: 'mdi-notebook-multiple',
+                    title: 'BOOKINGPAGE',
+                    to: `/booking/${this.$route.params.sid}`
+                },
             ],
             title: 'Reservierung',
             group: null,

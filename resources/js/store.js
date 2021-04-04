@@ -6,7 +6,7 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
     state: {
-        user: {},
+        user: {first_name: null, last_name: null, email: null, phone: null},
         ready: false,
         windowSize: {x: 0, y: 0}
     },
