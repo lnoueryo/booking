@@ -58,7 +58,6 @@
 import indication from "../mixins/indication"
 export default {
     mixins: [indication],
-    // props: ['title', 'types', 'price', 'duration', 'description', 'image'],
     props: {
         id: Number,
         title: String,

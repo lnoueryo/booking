@@ -58,7 +58,7 @@
                             <v-icon>mdi-logout</v-icon>
                         </v-list-item-action>
                         <v-list-item-content>
-                            <v-list-item-title v-text="'Logout'" />
+                            <v-list-item-title v-text="'LOGOUT'" />
                         </v-list-item-content>
                     </v-list-item>
                 </v-list>

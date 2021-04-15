@@ -130,14 +130,14 @@
                                 </v-time-picker>
                             </v-dialog>
                             </v-col>
+                            <v-col cols="12" sm="6">
+                                <v-autocomplete prepend-icon="mdi-content-cut" v-model="booking.plan" :items="shopPlans" item-text="title" label="プラン"></v-autocomplete>
+                            </v-col>
                             <v-col cols="12" sm="3">
                                 <v-text-field single-line style="background-color: white" prepend-icon="mdi-bitcoin" label="料金" required v-model="booking.price" autocomplete="new-password"></v-text-field>
                             </v-col>
                             <v-col cols="12" sm="3">
                                 <v-text-field prepend-icon="mdi-timer-sand" label="合計時間" required v-model="booking.duration" disabled></v-text-field>
-                            </v-col>
-                            <v-col cols="12" sm="6">
-                                <v-autocomplete prepend-icon="mdi-content-cut" v-model="booking.plan" :items="shopPlans" label="プラン"></v-autocomplete>
                             </v-col>
                             <v-row class="px-3" v-if="booking.user">
                                 <v-col cols="12" sm="10">
@@ -329,6 +329,7 @@ export default {
             num: 0,
             windowTime: '',
             shopPlans: [],
+            selectedPlan: '',
             timeOut: '',
         }
     },
@@ -395,6 +396,15 @@ export default {
             },
             immediate: false
         },
+        'booking.plan':{
+            handler(newValue){
+                const plan = this.shopPlans.find((shopPlan)=>{
+                    return shopPlan.title == newValue;
+                })
+                this.$set(this.booking, 'price', plan.price)
+            },
+            immediate: false
+        }
     },
     async created(){
         const response = await (axios.get(`/api/${this.$route.params.sid}/booking`));
@@ -448,7 +458,7 @@ export default {
         });
         const {data, err} = await axios.get(`/api/${this.$route.params.sid}/shop-plan`)
         data.forEach((v)=>{
-            this.shopPlans.push(v.title);
+            this.shopPlans.push(v);
         })
     },
     beforeDestroy(){

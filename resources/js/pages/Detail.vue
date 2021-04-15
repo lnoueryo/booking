@@ -14,7 +14,7 @@
                 <v-col cols="6">
                 <v-select v-model="select" :items="items" item-text="status" label="Select" persistent-hint return-object single-line @input="hello"></v-select>
                 </v-col>
-                <v-btn class="white--text" color="pink" @click="cancelDialog=true">削除</v-btn>
+                <!-- <v-btn class="white--text" color="pink" @click="cancelDialog=true">削除</v-btn> -->
             </div>
         </div>
         <div class="d-flex" style="justify-content: space-between;margin-bottom: 3%;flex-wrap:wrap;">
@@ -213,7 +213,7 @@ export default {
             } else {
                 seconds = '0' + changedFormat.getSeconds()
             }
-            const newFormat = `${month}月${date}日(${day[dayNum]}) ${hours}:${minutes}:${seconds}`
+            const newFormat = `${month}月${date}日(${day[dayNum]}) ${hours}:${minutes}`
             return newFormat;
         },
         time(time){
